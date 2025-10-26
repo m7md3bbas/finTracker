@@ -22,7 +22,7 @@ class AppRoutes {
       GoRoute(
         path: RoutesPath.signInScreen,
         name: RoutesName.signInScreen,
-        builder: (context, state) => const SignInScreen(),
+        builder: (context, state) => const SignIn(),
       ),
     ],
   );
