@@ -39,7 +39,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
             CircleAvatar(
-              radius: 95.r,
+              radius: 100.r,
               backgroundColor: Colors.white.modify(
                 colorCode: AppColors.mainCardColor,
               ),

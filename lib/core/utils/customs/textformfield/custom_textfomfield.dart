@@ -19,7 +19,7 @@ class CustomTextfomfield extends StatelessWidget {
   final bool obscureText;
   final bool? expands;
   final String hintText;
-  final Icon? suffixIcon;
+  final Widget? suffixIcon;
 
   @override
   Widget build(BuildContext context) {
