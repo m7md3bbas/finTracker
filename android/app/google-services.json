@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "281230189029",
+    "project_id": "fintracker-e7788",
+    "storage_bucket": "fintracker-e7788.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:281230189029:android:b6ba42c4364ec5bb6f4f0c",
+        "android_client_info": {
+          "package_name": "com.example.finance_track"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBXyyw0VYKUJbs8I-g61n-BU8i1N5BC_6k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
