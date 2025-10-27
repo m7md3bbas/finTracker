@@ -63,7 +63,7 @@ class BalanceCard extends StatelessWidget {
                 children: [
                   const Icon(
                     Icons.arrow_downward,
-                    color: Colors.white,
+                    color: Colors.greenAccent,
                     size: 18,
                   ),
                   SizedBox(width: 6.w),
@@ -92,7 +92,7 @@ class BalanceCard extends StatelessWidget {
 
               Row(
                 children: [
-                  const Icon(Icons.arrow_upward, color: Colors.white, size: 18),
+                  const Icon(Icons.arrow_upward, color: Colors.red, size: 18),
                   SizedBox(width: 6.w),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
