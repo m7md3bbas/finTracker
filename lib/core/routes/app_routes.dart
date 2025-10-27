@@ -1,11 +1,14 @@
 import 'dart:async';
 
+import 'package:finance_track/core/models/transactions_model.dart';
 import 'package:finance_track/core/routes/routes_name.dart';
 import 'package:finance_track/core/routes/routes_path.dart';
 import 'package:finance_track/features/auth/logic/login/login_cubit.dart';
 import 'package:finance_track/features/auth/views/sign_in_screen.dart';
 import 'package:finance_track/features/auth/views/sign_up_screen.dart';
 import 'package:finance_track/features/home/views/home_screen.dart';
+import 'package:finance_track/features/home/views/widgets/add_transaction_screen.dart';
+import 'package:finance_track/features/home/views/widgets/edit_transaction_screen.dart';
 import 'package:finance_track/features/onboarding/views/onboarding_screen.dart';
 import 'package:flutter/material.dart' show BuildContext;
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -37,6 +40,19 @@ class AppRoutes {
         path: RoutesPath.homeScreen,
         name: RoutesName.homeScreen,
         builder: (context, state) => const Home(),
+      ),
+      GoRoute(
+        path: RoutesPath.addTransactionScreen,
+        name: RoutesName.addTransactionScreen,
+        builder: (context, state) => const AddTransaction(),
+      ),
+      GoRoute(
+        path: RoutesPath.editTransactionScreen,
+        name: RoutesName.editTransactionScreen,
+        builder: (context, state) {
+          final transaction = state.extra as TransactionModel;
+          return EditTransaction(transaction: transaction);
+        },
       ),
     ],
   );

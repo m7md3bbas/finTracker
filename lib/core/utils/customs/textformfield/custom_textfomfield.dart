@@ -11,6 +11,9 @@ class CustomTextfomfield extends StatelessWidget {
     this.expands,
     required this.hintText,
     this.suffixIcon,
+    this.maxLines,
+    this.minLines,
+    this.labelText,
   });
   final TextEditingController controller;
   final String? Function(String?)? validator;
@@ -20,12 +23,18 @@ class CustomTextfomfield extends StatelessWidget {
   final bool? expands;
   final String hintText;
   final Widget? suffixIcon;
+  final int? maxLines;
+  final int? minLines;
+  final String? labelText;
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
       keyboardType: keyboardType,
+      maxLines: obscureText ? 1 : maxLines,
+      minLines: minLines,
       decoration: InputDecoration(
+        labelText: labelText,
         suffixIcon: suffixIcon,
         hintText: hintText,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(radius)),
