@@ -7,7 +7,7 @@ class BottomCurveClipper extends CustomClipper<Path> {
     path.lineTo(0, size.height - 50);
     path.quadraticBezierTo(
       size.width / 2,
-      size.height,
+      size.height + 50,
       size.width,
       size.height - 50,
     );
