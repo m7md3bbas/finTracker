@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -18,8 +19,39 @@ class Home extends StatelessWidget {
   }
 }
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  late final ScrollController _scrollController;
+  bool isArrowDown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollController.jumpTo(18 * 132.w);
+    });
+  }
+
+  DateTime selectedDate = DateTime.now();
+  late final List<DateTime> allDates = _generateDatesForTwoYears();
+
+  List<DateTime> _generateDatesForTwoYears() {
+    final start = DateTime.now();
+    final end = DateTime(start.year + 3, start.month, start.day);
+    final days = <DateTime>[];
+    for (int i = 0; i <= end.difference(start).inDays; i++) {
+      days.add(start.add(Duration(days: i)));
+    }
+    return days;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -95,9 +127,8 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 Positioned(
-                  bottom: -70.h,
+                  bottom: -80.h,
                   left: 20.w,
                   right: 20.w,
                   child: const BalanceCard(
@@ -109,39 +140,176 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
           ),
-          SliverToBoxAdapter(child: SizedBox(height: 80.h)),
 
+          SliverToBoxAdapter(child: SizedBox(height: 90.h)),
           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    "Recent Transactions",
-                    style: GoogleFonts.inter(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(
+                      Icons.calendar_month,
+                      color: Colors.white.modify(
+                        colorCode: AppColors.mainAppColor,
+                      ),
                     ),
+                    title: Text(
+                      "Select Month",
+                      style: GoogleFonts.inter(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    trailing: Container(
+                      padding: EdgeInsets.all(1.w),
+                      decoration: BoxDecoration(
+                        color: Colors.white.modify(
+                          colorCode: AppColors.mainCardColor,
+                        ),
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: IconButton(
+                        icon: Icon(
+                          isArrowDown
+                              ? Icons.keyboard_arrow_down
+                              : Icons.keyboard_arrow_right,
+                          color: Colors.white,
+                          size: 24.sp,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            isArrowDown = !isArrowDown;
+                          });
+                        },
+                      ),
+                    ),
+                    titleAlignment: ListTileTitleAlignment.center,
                   ),
-                  const Spacer(),
-                  Text(
-                    "See all",
-                    style: GoogleFonts.inter(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey,
+
+                  SizedBox(height: 8.h),
+                  SizedBox(
+                    height: 90.h,
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      scrollDirection: Axis.horizontal,
+                      itemCount: 36,
+                      itemBuilder: (context, index) {
+                        final now = DateTime.now();
+                        final startMonth = now.month - 18;
+                        final date = DateTime(now.year, startMonth + index, 1);
+                        final isSelected =
+                            date.month == selectedDate.month &&
+                            date.year == selectedDate.year;
+
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedDate = date;
+                            });
+                          },
+                          child: Container(
+                            width: 120.w,
+                            margin: EdgeInsets.symmetric(horizontal: 6.w),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? Colors.white.modify(
+                                      colorCode: AppColors.mainCardColor,
+                                    )
+                                  : Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            child: Center(
+                              child: Text(
+                                DateFormat('MMM\nyyyy').format(date),
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14.sp,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Colors.black87,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
               ),
             ),
           ),
+          if (isArrowDown)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8.w),
+                child: SizedBox(
+                  height: 50.h,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: 6,
+                    itemBuilder: (context, index) => Card(
+                      color: Colors.grey.shade200,
+                      elevation: 1,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Center(
+                          child: Text(
+                            "category $index",
+                            style: GoogleFonts.inter(fontSize: 10.sp),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            )
+          else
+            const SliverToBoxAdapter(child: SizedBox.shrink()),
 
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8.w),
+              child: ListTile(
+                leading: Text(
+                  "Recent Transactions",
+                  style: GoogleFonts.inter(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                trailing: TextButton(
+                  style: TextButton.styleFrom(
+                    minimumSize: Size.zero,
+                    padding: EdgeInsets.zero,
+                  ),
+                  onPressed: () {},
+                  child: Text(
+                    "See All",
+                    style: GoogleFonts.inter(
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
           SliverPadding(
-            padding: EdgeInsets.all(8.w),
+            padding: EdgeInsets.symmetric(horizontal: 8.w),
             sliver: SliverList.builder(
-              itemCount: 10,
+              itemCount: 4,
               itemBuilder: (context, index) => Card(
                 elevation: 1,
                 shape: RoundedRectangleBorder(
