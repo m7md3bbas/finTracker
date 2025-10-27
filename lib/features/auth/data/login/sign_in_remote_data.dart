@@ -1,7 +1,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class SginInRemoteData {
+class SignInRemoteData {
   final SupabaseClient supabaseClient = Supabase.instance.client;
+  get user => supabaseClient.auth.currentUser;
 
   Future<void> signIn({required String email, required String password}) async {
     try {
