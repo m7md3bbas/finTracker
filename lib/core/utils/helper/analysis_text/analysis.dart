@@ -361,36 +361,45 @@ DateTime _extractDate(String text) {
 
   // أيام مباشرة
   if (lower.contains('اليوم') || lower.contains('today')) return now;
-  if (lower.contains('أمس') || lower.contains('yesterday'))
+  if (lower.contains('أمس') || lower.contains('yesterday')) {
     return now.subtract(Duration(days: 1));
+  }
   if (lower.contains('غداً') ||
       lower.contains('غدا') ||
-      lower.contains('tomorrow'))
+      lower.contains('tomorrow')) {
     return now.add(Duration(days: 1));
+  }
 
   // الأسبوع القادم / الماضي
-  if (lower.contains('الأسبوع القادم'))
+  if (lower.contains('الأسبوع القادم')) {
     return now.add(Duration(days: 7 - now.weekday + 1));
-  if (lower.contains('الأسبوع الماضي'))
+  }
+  if (lower.contains('الأسبوع الماضي')) {
     return now.subtract(Duration(days: now.weekday + 6));
+  }
 
   // الشهر القادم / السابق
-  if (lower.contains('الشهر القادم'))
+  if (lower.contains('الشهر القادم')) {
     return DateTime(now.year, now.month + 1, 1);
-  if (lower.contains('الشهر اللي فات') || lower.contains('الشهر السابق'))
+  }
+  if (lower.contains('الشهر اللي فات') || lower.contains('الشهر السابق')) {
     return DateTime(now.year, now.month - 1, 1);
+  }
 
   // الشهرين القادمين / الشهرين السابقين
-  if (lower.contains('الشهرين القادمين'))
+  if (lower.contains('الشهرين القادمين')) {
     return DateTime(now.year, now.month + 2, 1);
+  }
   if (lower.contains('الشهرين اللي فاتوا') ||
-      lower.contains('الشهرين السابقين'))
+      lower.contains('الشهرين السابقين')) {
     return DateTime(now.year, now.month - 2, 1);
+  }
 
   // السنة القادمة / السابقة
   if (lower.contains('السنة القادمة')) return DateTime(now.year + 1, 1, 1);
-  if (lower.contains('السنة اللي فاتت') || lower.contains('السنة السابقة'))
+  if (lower.contains('السنة اللي فاتت') || lower.contains('السنة السابقة')) {
     return DateTime(now.year - 1, 1, 1);
+  }
 
   // آخر X أيام/أسابيع/شهور
   final recentRegex = RegExp(r'آخر (\d+) (أيام|أسابيع|شهور|months|weeks|days)');
@@ -398,12 +407,15 @@ DateTime _extractDate(String text) {
   if (recentMatch != null) {
     final num = int.tryParse(recentMatch.group(1)!) ?? 1;
     final unit = recentMatch.group(2)!;
-    if (unit.contains('يوم') || unit.contains('day'))
+    if (unit.contains('يوم') || unit.contains('day')) {
       return now.subtract(Duration(days: num));
-    if (unit.contains('أسبوع') || unit.contains('week'))
+    }
+    if (unit.contains('أسبوع') || unit.contains('week')) {
       return now.subtract(Duration(days: num * 7));
-    if (unit.contains('شهر') || unit.contains('month'))
+    }
+    if (unit.contains('شهر') || unit.contains('month')) {
       return DateTime(now.year, now.month - num, now.day);
+    }
   }
 
   // نمط dd/mm/yyyy أو dd-mm-yyyy أو yyyy-mm-dd
@@ -424,12 +436,13 @@ DateTime _extractDate(String text) {
         );
       } else if (found.contains('-')) {
         final parts = found.split('-');
-        if (parts[0].length == 4)
+        if (parts[0].length == 4) {
           return DateTime(
             int.parse(parts[0]),
             int.parse(parts[1]),
             int.parse(parts[2]),
           );
+        }
         return DateTime(
           int.parse(parts[2]),
           int.parse(parts[1]),
@@ -474,16 +487,18 @@ DateTime _extractDate(String text) {
   for (final mn in monthNames.keys) {
     final r = RegExp(r'(\d{1,2})\s+' + RegExp.escape(mn), caseSensitive: false);
     final mm = r.firstMatch(text);
-    if (mm != null)
+    if (mm != null) {
       return DateTime(now.year, monthNames[mn]!, int.parse(mm.group(1)!));
+    }
 
     final r2 = RegExp(
       RegExp.escape(mn) + r'\s+(\d{1,2})',
       caseSensitive: false,
     );
     final mm2 = r2.firstMatch(text);
-    if (mm2 != null)
+    if (mm2 != null) {
       return DateTime(now.year, monthNames[mn]!, int.parse(mm2.group(1)!));
+    }
   }
 
   // ضبط ضمن ±18 شهر
@@ -498,8 +513,12 @@ DateTime _extractDate(String text) {
 
 String _extractType(String text) {
   final lower = text.toLowerCase();
-  for (final k in _incomeKeywords) if (lower.contains(k)) return 'income';
-  for (final k in _expenseKeywords) if (lower.contains(k)) return 'expense';
+  for (final k in _incomeKeywords) {
+    if (lower.contains(k)) return 'income';
+  }
+  for (final k in _expenseKeywords) {
+    if (lower.contains(k)) return 'expense';
+  }
 
   // heuristics
   for (final kw in _categoryKeywords.keys) {
@@ -523,8 +542,9 @@ String _extractType(String text) {
 
 String? _extractCategoryName(String text) {
   final lower = text.toLowerCase();
-  for (final kw in _categoryKeywords.keys)
+  for (final kw in _categoryKeywords.keys) {
     if (lower.contains(kw)) return _categoryKeywords[kw];
+  }
   return null;
 }
 

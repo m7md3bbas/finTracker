@@ -1,14 +1,10 @@
-import 'package:finance_track/core/extentions/modified_colors.dart';
 import 'package:finance_track/core/models/category_model.dart';
 import 'package:finance_track/core/models/transactions_model.dart';
-import 'package:finance_track/core/utils/colors/app_colors.dart';
 import 'package:finance_track/core/utils/customs/custom_buttons/custom_button.dart';
 import 'package:finance_track/core/utils/customs/textformfield/custom_textfomfield.dart';
 import 'package:finance_track/core/utils/helper/category/category_list.dart';
 import 'package:finance_track/core/utils/popups/toast.dart';
 import 'package:finance_track/features/auth/logic/login/login_cubit.dart';
-import 'package:finance_track/features/home/logic/homecubit/home_cubit.dart';
-import 'package:finance_track/features/home/logic/homecubit/home_states.dart';
 import 'package:finance_track/features/home/logic/transactions/transaction_cubit.dart';
 import 'package:finance_track/features/home/logic/transactions/transaction_state.dart';
 import 'package:flutter/material.dart';
