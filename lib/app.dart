@@ -1,5 +1,7 @@
 import 'package:finance_track/core/routes/app_routes.dart';
+import 'package:finance_track/features/auth/logic/login/login_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class FinTracker extends StatelessWidget {
@@ -7,11 +9,14 @@ class FinTracker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ScreenUtilInit(
-      designSize: const Size(375, 812),
-      child: MaterialApp.router(
-        debugShowCheckedModeBanner: false,
-        routerConfig: AppRoutes.routes,
+    return BlocProvider(
+      create: (context) => LoginCubit(),
+      child: ScreenUtilInit(
+        designSize: const Size(375, 812),
+        child: MaterialApp.router(
+          debugShowCheckedModeBanner: false,
+          routerConfig: AppRoutes.routes,
+        ),
       ),
     );
   }

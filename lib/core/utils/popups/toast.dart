@@ -5,7 +5,7 @@ class ToastNotifier {
   static void showSuccess(String message) => Fluttertoast.showToast(
     msg: message,
     backgroundColor: Colors.green,
-    gravity: ToastGravity.CENTER,
+    gravity: ToastGravity.TOP,
     textColor: Colors.white,
   );
 

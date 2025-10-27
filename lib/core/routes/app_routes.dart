@@ -1,12 +1,21 @@
+import 'dart:async';
+
 import 'package:finance_track/core/routes/routes_name.dart';
 import 'package:finance_track/core/routes/routes_path.dart';
+import 'package:finance_track/features/auth/logic/login/login_cubit.dart';
 import 'package:finance_track/features/auth/views/sign_in_screen.dart';
 import 'package:finance_track/features/auth/views/sign_up_screen.dart';
+import 'package:finance_track/features/home/views/home_screen.dart';
 import 'package:finance_track/features/onboarding/views/onboarding_screen.dart';
+import 'package:flutter/material.dart' show BuildContext;
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+part 'redirect.dart';
 
 class AppRoutes {
   static final routes = GoRouter(
+    debugLogDiagnostics: true,
+    redirect: (context, state) => getRedirect(context, state),
     initialLocation: RoutesPath.onBoradingScreen,
     routes: [
       GoRoute(
@@ -17,12 +26,17 @@ class AppRoutes {
       GoRoute(
         path: RoutesPath.signUpScreen,
         name: RoutesName.signUpScreen,
-        builder: (context, state) => const SignUpScreen(),
+        builder: (context, state) => const SignUp(),
       ),
       GoRoute(
         path: RoutesPath.signInScreen,
         name: RoutesName.signInScreen,
         builder: (context, state) => const SignIn(),
+      ),
+      GoRoute(
+        path: RoutesPath.homeScreen,
+        name: RoutesName.homeScreen,
+        builder: (context, state) => const Home(),
       ),
     ],
   );
