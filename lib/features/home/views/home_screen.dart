@@ -92,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
     await _speechToText.stop();
 
     if (!_hasNavigatedToEdit && _lastWords.isNotEmpty) {
-      _hasNavigatedToEdit = true; // ← فلاغ لمنع push مرتين
+      _hasNavigatedToEdit = true;
       final transactionModel = parseTransactionFromText(
         _lastWords,
         context.read<LoginCubit>().user?.id ?? '',
@@ -156,6 +156,10 @@ class _HomeScreenState extends State<HomeScreen> {
           body: Stack(
             children: [
               RefreshIndicator(
+                backgroundColor: Colors.white.modify(
+                  colorCode: AppColors.mainAppColor,
+                ),
+                color: Colors.white,
                 onRefresh: () async {
                   await cubit.getHomeData(
                     userId: context.read<LoginCubit>().user?.id ?? '',
@@ -164,7 +168,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
                 child: CustomScrollView(
                   slivers: [
-                    // Header & Balance
                     SliverToBoxAdapter(
                       child: Stack(
                         clipBehavior: Clip.none,
