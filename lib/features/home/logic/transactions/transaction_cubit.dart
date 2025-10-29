@@ -12,7 +12,7 @@ class TransactionCubit extends Cubit<TransactionState> {
   Future<void> addTransaction(TransactionModel transaction) async {
     emit(state.copyWith(status: Transactionstatus.loading));
     try {
-      Future.delayed(const Duration(seconds: 2), () async {
+      await Future.delayed(const Duration(seconds: 2), () async {
         await remoteData.addTransaction(transaction);
       });
       emit(
@@ -31,7 +31,7 @@ class TransactionCubit extends Cubit<TransactionState> {
   Future<void> updateTransaction(TransactionModel transaction) async {
     emit(state.copyWith(status: Transactionstatus.loading));
     try {
-      Future.delayed(const Duration(seconds: 2), () async {
+      await Future.delayed(const Duration(seconds: 2), () async {
         await remoteData.updateTransaction(transaction);
       });
       emit(
@@ -50,7 +50,7 @@ class TransactionCubit extends Cubit<TransactionState> {
   Future<void> deleteTransaction(String transactionId) async {
     emit(state.copyWith(status: Transactionstatus.loading));
     try {
-      Future.delayed(const Duration(seconds: 2), () async {
+      await Future.delayed(const Duration(seconds: 2), () async {
         await remoteData.deleteTransaction(transactionId);
       });
       emit(

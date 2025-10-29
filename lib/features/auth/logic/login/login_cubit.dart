@@ -7,6 +7,8 @@ class LoginCubit extends Cubit<LoginState> {
   LoginCubit() : super(LoginState(status: LoginStatus.initial));
   final SignInRemoteData remoteData = SignInRemoteData();
   User? get user => remoteData.user;
+  Future<String?> get profilePic async => await remoteData.userImage;
+
   void signIn({required String email, required String password}) async {
     emit(state.copyWith(status: LoginStatus.loading));
     try {

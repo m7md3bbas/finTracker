@@ -15,6 +15,7 @@ import 'package:intl/intl.dart';
 class EditTransaction extends StatelessWidget {
   const EditTransaction({super.key, required this.transaction});
   final TransactionModel transaction;
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -43,6 +44,31 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
   DateTime? _selectedDate;
   CategoryModel? _selectedCategory;
 
+  double? _parseAmount(String raw) {
+    const arabicIndic = {
+      '٠': '0',
+      '١': '1',
+      '٢': '2',
+      '٣': '3',
+      '٤': '4',
+      '٥': '5',
+      '٦': '6',
+      '٧': '7',
+      '٨': '8',
+      '٩': '9',
+    };
+    String normalized = raw.trim();
+    arabicIndic.forEach((k, v) {
+      normalized = normalized.replaceAll(k, v);
+    });
+    normalized = normalized
+        .replaceAll('٬', '') // Arabic thousands separator
+        .replaceAll(',', '') // Common thousands separator
+        .replaceAll('٫', '.') // Arabic decimal separator
+        .replaceAll(' ', '');
+    return double.tryParse(normalized);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -50,7 +76,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     isExpense = t.type == 'expense' ? true : false;
     _titleController = TextEditingController(text: t.title);
     _amountController = TextEditingController(text: t.amount.toString());
-    _noteController = TextEditingController(text: t.note ?? '');
+    _noteController = TextEditingController(text: t.note);
     _selectedDate = t.date;
     if (t.categoryName != null) {
       _selectedCategory = categories.firstWhere(
@@ -178,40 +204,31 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
 
   void _saveTransaction() async {
     if (_formKey.currentState!.validate()) {
-      final amount = double.tryParse(
-        _amountController.text.replaceAll(',', '.'),
-      );
+      final amount = _parseAmount(_amountController.text);
       if (amount == null) {
         ToastNotifier.showError("Please enter a valid amount");
         return;
       }
 
-      if (_selectedCategory == null) {
+      final resolvedCategoryName =
+          _selectedCategory?.name ?? widget.transaction.categoryName;
+      if (resolvedCategoryName == null || resolvedCategoryName.isEmpty) {
         ToastNotifier.showError("Please select a category");
         return;
       }
 
-      try {
-        final updatedTransaction = TransactionModel(
-          userId: widget.transaction.userId,
-          title: _titleController.text.trim(),
-          categoryName: _selectedCategory!.name,
-          amount: amount,
-          type: isExpense ? 'expense' : 'income',
-          date: _selectedDate ?? DateTime.now(),
-          note: _noteController.text.trim().isEmpty
-              ? null
-              : _noteController.text.trim(),
-          createdAt: widget.transaction.createdAt,
-        );
+      final updatedTransaction = widget.transaction.copyWith(
+        title: _titleController.text.trim(),
+        amount: amount,
+        note: _noteController.text.trim(),
+        date: _selectedDate ?? widget.transaction.date,
+        categoryName: resolvedCategoryName,
+        type: isExpense ? 'expense' : 'income',
+      );
 
-        await context
-            .read<TransactionCubit>()
-            .addTransaction(updatedTransaction)
-            .then((value) => context.pop());
-      } catch (e) {
-        ToastNotifier.showError("Failed to update transaction: $e");
-      }
+      await context.read<TransactionCubit>().updateTransaction(
+        updatedTransaction,
+      );
     }
   }
 
@@ -221,12 +238,17 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     final bgColor = isExpense ? Colors.red.shade50 : Colors.green.shade50;
 
     return BlocConsumer<TransactionCubit, TransactionState>(
-      listener: (context, state) {},
+      listener: (context, state) {
+        if (state.status.isSuccess) {
+          ToastNotifier.showSuccess(state.message.toString());
+          context.pop();
+        }
+      },
       builder: (context, state) {
         return Scaffold(
           backgroundColor: bgColor,
           appBar: AppBar(
-            leading: const BackButton(color: Colors.white),
+            leading: BackButton(color: Colors.white),
             backgroundColor: accentColor,
             title: Text(
               isExpense ? 'Edit Expense' : 'Edit Income',
@@ -235,165 +257,197 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                 color: Colors.white,
               ),
             ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.delete),
+                color: Colors.white,
+                onPressed: () => context
+                    .read<TransactionCubit>()
+                    .deleteTransaction(widget.transaction.id ?? ''),
+              ),
+            ],
             centerTitle: true,
           ),
-          body: Padding(
-            padding: EdgeInsets.all(16.w),
-            child: SingleChildScrollView(
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(6.w),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: Row(
+          body: state.status.isLoading
+              ? Center(child: CircularProgressIndicator(color: accentColor))
+              : Padding(
+                  padding: EdgeInsets.all(16.w),
+                  child: SingleChildScrollView(
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
                         children: [
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () => setState(() => isExpense = false),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
-                                padding: EdgeInsets.symmetric(vertical: 12.h),
-                                decoration: BoxDecoration(
-                                  color: !isExpense
-                                      ? Colors.green
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(8.r),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    'Income',
-                                    style: TextStyle(
-                                      color: !isExpense
-                                          ? Colors.white
-                                          : Colors.grey.shade700,
-                                      fontWeight: FontWeight.bold,
+                          Container(
+                            padding: EdgeInsets.all(6.w),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () =>
+                                        setState(() => isExpense = false),
+                                    child: AnimatedContainer(
+                                      duration: const Duration(
+                                        milliseconds: 200,
+                                      ),
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 12.h,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: !isExpense
+                                            ? Colors.green
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(
+                                          8.r,
+                                        ),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          'Income',
+                                          style: TextStyle(
+                                            color: !isExpense
+                                                ? Colors.white
+                                                : Colors.grey.shade700,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 8.w),
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () => setState(() => isExpense = true),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
-                                padding: EdgeInsets.symmetric(vertical: 12.h),
-                                decoration: BoxDecoration(
-                                  color: isExpense
-                                      ? Colors.redAccent
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(8.r),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    'Expense',
-                                    style: TextStyle(
-                                      color: isExpense
-                                          ? Colors.white
-                                          : Colors.grey.shade700,
-                                      fontWeight: FontWeight.bold,
+                                SizedBox(width: 8.w),
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () =>
+                                        setState(() => isExpense = true),
+                                    child: AnimatedContainer(
+                                      duration: const Duration(
+                                        milliseconds: 200,
+                                      ),
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 12.h,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: isExpense
+                                            ? Colors.redAccent
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(
+                                          8.r,
+                                        ),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          'Expense',
+                                          style: TextStyle(
+                                            color: isExpense
+                                                ? Colors.white
+                                                : Colors.grey.shade700,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: 20.h),
+                          CustomTextfomfield(
+                            labelText: 'Title',
+                            controller: _titleController,
+                            hintText: 'Title',
+                            keyboardType: TextInputType.text,
+                            validator: (v) => v!.isEmpty ? 'Enter title' : null,
+                          ),
+                          SizedBox(height: 16.h),
+                          CustomTextfomfield(
+                            labelText: 'Amount',
+                            controller: _amountController,
+                            keyboardType: TextInputType.number,
+                            hintText: 'Amount',
+                            validator: (v) =>
+                                v!.isEmpty ? 'Enter amount' : null,
+                          ),
+                          SizedBox(height: 16.h),
+                          InkWell(
+                            onTap: _showCategoryPicker,
+                            borderRadius: BorderRadius.circular(12.r),
+                            child: InputDecorator(
+                              decoration: const InputDecoration(
+                                labelText: 'Category',
+                                prefixIcon: Icon(Icons.category),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(12),
+                                  ),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    _selectedCategory?.name ??
+                                        'Select Category',
+                                    style: TextStyle(
+                                      fontSize: 16.sp,
+                                      color: _selectedCategory == null
+                                          ? Colors.grey
+                                          : Colors.black,
+                                    ),
+                                  ),
+                                  if (_selectedCategory != null)
+                                    Text(
+                                      _selectedCategory?.icon ?? '',
+                                      style: const TextStyle(fontSize: 22),
+                                    ),
+                                ],
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 20.h),
-                    CustomTextfomfield(
-                      labelText: 'Title',
-                      controller: _titleController,
-                      hintText: 'Title',
-                      keyboardType: TextInputType.text,
-                      validator: (v) => v!.isEmpty ? 'Enter title' : null,
-                    ),
-                    SizedBox(height: 16.h),
-                    CustomTextfomfield(
-                      labelText: 'Amount',
-                      controller: _amountController,
-                      keyboardType: TextInputType.number,
-                      hintText: 'Amount',
-                      validator: (v) => v!.isEmpty ? 'Enter amount' : null,
-                    ),
-                    SizedBox(height: 16.h),
-                    InkWell(
-                      onTap: _showCategoryPicker,
-                      borderRadius: BorderRadius.circular(12.r),
-                      child: InputDecorator(
-                        decoration: const InputDecoration(
-                          labelText: 'Category',
-                          prefixIcon: Icon(Icons.category),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              _selectedCategory?.name ?? 'Select Category',
-                              style: TextStyle(
-                                fontSize: 16.sp,
-                                color: _selectedCategory == null
-                                    ? Colors.grey
-                                    : Colors.black,
+                          SizedBox(height: 16.h),
+                          InkWell(
+                            onTap: _pickDate,
+                            borderRadius: BorderRadius.circular(12.r),
+                            child: InputDecorator(
+                              decoration: const InputDecoration(
+                                labelText: 'Date',
+                                prefixIcon: Icon(Icons.calendar_today),
+                              ),
+                              child: Text(
+                                _selectedDate == null
+                                    ? DateFormat(
+                                        'MMM yyyy',
+                                      ).format(DateTime.now())
+                                    : DateFormat(
+                                        'MMM yyyy',
+                                      ).format(_selectedDate!),
                               ),
                             ),
-                            if (_selectedCategory != null)
-                              Text(
-                                _selectedCategory?.icon ?? '',
-                                style: const TextStyle(fontSize: 22),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 16.h),
-                    InkWell(
-                      onTap: _pickDate,
-                      borderRadius: BorderRadius.circular(12.r),
-                      child: InputDecorator(
-                        decoration: const InputDecoration(
-                          labelText: 'Date',
-                          prefixIcon: Icon(Icons.calendar_today),
-                        ),
-                        child: Text(
-                          _selectedDate == null
-                              ? DateFormat('MMM yyyy').format(DateTime.now())
-                              : DateFormat('MMM yyyy').format(_selectedDate!),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 16.h),
-                    CustomTextfomfield(
-                      labelText: 'Note',
-                      controller: _noteController,
-                      keyboardType: TextInputType.text,
-                      maxLines: 3,
-                      hintText: 'Note',
-                    ),
-                    SizedBox(height: 30.h),
-                    state.status.isLoading
-                        ? CircularProgressIndicator(color: accentColor)
-                        : CustomButton(
+                          ),
+                          SizedBox(height: 16.h),
+                          CustomTextfomfield(
+                            labelText: 'Note',
+                            controller: _noteController,
+                            keyboardType: TextInputType.text,
+                            maxLines: 3,
+                            hintText: 'Note',
+                          ),
+                          SizedBox(height: 30.h),
+                          CustomButton(
                             onPressed: _saveTransaction,
                             text: 'Save',
                             color: accentColor,
                           ),
-                  ],
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ),
         );
       },
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:shimmer/shimmer.dart';
 
 class TransactionItemShimmer extends StatelessWidget {
@@ -10,19 +11,27 @@ class TransactionItemShimmer extends StatelessWidget {
     return Shimmer.fromColors(
       baseColor: Colors.grey.shade300,
       highlightColor: Colors.grey.shade100,
-      child: Card(
-        elevation: 1,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.r),
+      child: Slidable(
+        endActionPane: ActionPane(
+          motion: const DrawerMotion(),
+          extentRatio: 0.4,
+          children: [
+            SlidableAction(
+              onPressed: (context) {},
+              backgroundColor: Theme.of(context).cardColor,
+              foregroundColor: Colors.blue,
+              icon: Icons.edit,
+              borderRadius: BorderRadius.circular(12.r),
+              label: 'Edit',
+            ),
+          ],
         ),
-        child: ListTile(
-          contentPadding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
-          title: Container(height: 14.h, width: 120.w, color: Colors.white),
-          subtitle: Padding(
-            padding: EdgeInsets.only(top: 6.h),
-            child: Container(height: 12.h, width: 80.w, color: Colors.white),
+        child: Card(
+          elevation: 1,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
           ),
-          trailing: Container(height: 16.h, width: 60.w, color: Colors.white),
+          child: ListTile(),
         ),
       ),
     );
