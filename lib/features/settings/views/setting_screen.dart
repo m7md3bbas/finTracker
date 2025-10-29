@@ -53,11 +53,13 @@ class _SettingScreenState extends State<SettingScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final img = await SharedPref().getProfilePicture();
-      img == null
-          ? context.read<ImageCubit>().getImage()
-          : pickedImage = File(img);
+      if (img == null) {
+        context.read<ImageCubit>().getImage();
+      } else {
+        context.read<ImageCubit>().setImageUrl(img);
+      }
     });
   }
 
@@ -80,62 +82,58 @@ class _SettingScreenState extends State<SettingScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          ClipPath(
-            clipper: BottomCurveClipper(),
-            child: Container(
-              width: double.infinity,
-              height: 230.h,
-              decoration: BoxDecoration(
-                color: Colors.white.modify(colorCode: AppColors.mainAppColor),
-              ),
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: BlocConsumer<ImageCubit, ImageState>(
-                      listener: (context, state) async {
-                        if (state.status.isError) {
-                          ToastNotifier.showError(state.message.toString());
-                        }
-                      },
-                      builder: (context, state) {
-                        return Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            GestureDetector(
-                              onTap: pickImage,
-                              child: CircleAvatar(
-                                radius: 50.r,
-                                backgroundColor: Colors.white,
-                                child: ClipOval(
-                                  child: pickedImage != null
-                                      ? Image.file(
-                                          pickedImage!,
-                                          width: 100.r,
-                                          height: 100.r,
-                                          fit: BoxFit.cover,
-                                        )
-                                      : (state.imageUrl != null
-                                            ? state.status.isLoading
-                                                  ? const CircularProgressIndicator(
-                                                      color: Colors.white,
-                                                    )
-                                                  : CachedNetworkImage(
+      body: SafeArea(
+        child: Column(
+          children: [
+            ClipPath(
+              clipper: BottomCurveClipper(),
+              child: Container(
+                width: double.infinity,
+                height: 230.h,
+                decoration: BoxDecoration(
+                  color: Colors.white.modify(colorCode: AppColors.mainAppColor),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: BlocConsumer<ImageCubit, ImageState>(
+                        listener: (context, state) async {
+                          if (state.status.isSuccess) {
+                            ToastNotifier.showSuccess(state.message.toString());
+                          }
+                          if (state.status.isError) {
+                            ToastNotifier.showError(state.message.toString());
+                          }
+                        },
+                        builder: (context, state) {
+                          return Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              GestureDetector(
+                                onTap: pickImage,
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 50.r,
+                                      backgroundColor: Colors.white,
+                                      child: ClipOval(
+                                        child: pickedImage != null
+                                            ? Image.file(
+                                                pickedImage!,
+                                                width: 100.r,
+                                                height: 100.r,
+                                                fit: BoxFit.cover,
+                                              )
+                                            : (state.imageUrl != null
+                                                  ? CachedNetworkImage(
                                                       imageUrl: state.imageUrl!,
                                                       width: 100.r,
                                                       height: 100.r,
                                                       fit: BoxFit.cover,
                                                       placeholder: (context, url) =>
-                                                          CircularProgressIndicator(
-                                                            color: Colors.white
-                                                                .modify(
-                                                                  colorCode:
-                                                                      AppColors
-                                                                          .mainAppColor,
-                                                                ),
-                                                          ),
+                                                          Container(), // Do not show loader here; handled outside
                                                       errorWidget:
                                                           (
                                                             context,
@@ -146,44 +144,47 @@ class _SettingScreenState extends State<SettingScreen> {
                                                             color: Colors.grey,
                                                           ),
                                                     )
-                                            : const Icon(
-                                                Icons.person,
-                                                color: Colors.grey,
-                                              )),
+                                                  : const Icon(
+                                                      Icons.person,
+                                                      color: Colors.grey,
+                                                    )),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ),
-                            SizedBox(height: 16.h),
-                            Text(
-                              context
-                                      .read<LoginCubit>()
-                                      .user
-                                      ?.userMetadata?['name'] ??
-                                  '',
-                              style: GoogleFonts.inter(
-                                fontSize: 18.sp,
-                                color: Colors.white,
+                              SizedBox(height: 16.h),
+                              Text(
+                                context
+                                        .read<LoginCubit>()
+                                        .user
+                                        ?.userMetadata?['name'] ??
+                                    '',
+                                style: GoogleFonts.inter(
+                                  fontSize: 18.sp,
+                                  color: Colors.white,
+                                ),
                               ),
-                            ),
-                            SizedBox(height: 8.h),
-                            Text(
-                              context.read<LoginCubit>().user?.email ?? '',
-                              style: GoogleFonts.inter(
-                                fontSize: 14.sp,
-                                color: Colors.white,
+                              SizedBox(height: 8.h),
+                              Text(
+                                context.read<LoginCubit>().user?.email ?? '',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14.sp,
+                                  color: Colors.white,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        );
-                      },
+                            ],
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
