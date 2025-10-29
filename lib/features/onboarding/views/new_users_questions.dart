@@ -261,7 +261,7 @@ class _NewUsersQuestionsScreenState extends State<NewUsersQuestionsScreen> {
                       DateFormat('yyyy-MM').format(_selectedDate!),
                     ),
                   ]);
-                  context.pushNamed(RoutesName.homeScreen);
+                  context.goNamed(RoutesName.homeScreen);
                 },
               ),
               SizedBox(height: 40.h),
