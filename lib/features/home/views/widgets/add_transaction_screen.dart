@@ -53,8 +53,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   void _pickDate() async {
     final picked = await showDatePicker(
       context: context,
-      firstDate: DateTime.now().subtract(const Duration(days: 365 * 3 ~/ 2)),
-      lastDate: DateTime.now().add(const Duration(days: 365 * 3 ~/ 2)),
+      initialDate: DateTime.now(),
+      firstDate: DateTime(DateTime.now().year, 1, 1),
+      lastDate: DateTime(2100, 12, 31),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: ColorScheme.light(
@@ -197,7 +198,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               : _noteController.text.trim(),
           createdAt: DateTime.now(),
         );
-
         await context.read<TransactionCubit>().addTransaction(transaction);
       } catch (e) {
         ToastNotifier.showError("Failed to add transaction: $e");

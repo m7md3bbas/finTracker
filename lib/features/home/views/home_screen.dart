@@ -1,8 +1,9 @@
 import 'package:finance_track/core/extentions/modified_colors.dart';
+import 'package:finance_track/core/models/category_model.dart';
+import 'package:finance_track/core/models/transactions_model.dart';
 import 'package:finance_track/core/routes/routes_name.dart';
 import 'package:finance_track/core/utils/colors/app_colors.dart';
 import 'package:finance_track/core/utils/helper/analysis_text/analysis.dart';
-import 'package:finance_track/core/utils/helper/greatings/greating_function.dart';
 import 'package:finance_track/core/utils/helper/ui/customcurvecliper.dart';
 import 'package:finance_track/core/utils/popups/toast.dart';
 import 'package:finance_track/features/auth/logic/login/login_cubit.dart';
@@ -10,17 +11,21 @@ import 'package:finance_track/features/home/logic/homecubit/home_cubit.dart';
 import 'package:finance_track/features/home/logic/homecubit/home_states.dart';
 import 'package:finance_track/features/home/views/widgets/cardexpensesandincome.dart';
 import 'package:finance_track/features/home/views/widgets/shimmer_card.dart';
-import 'package:finance_track/features/home/views/widgets/transaction_methods_item.dart';
 import 'package:finance_track/features/home/views/widgets/transaction_shimmer_item.dart';
+import 'package:finance_track/features/home/views/widgets/home_header.dart';
+import 'package:finance_track/features/home/views/widgets/month_selector.dart';
+import 'package:finance_track/features/home/views/widgets/category_filter_chips.dart';
+import 'package:finance_track/features/home/views/widgets/recent_transactions_header.dart';
+import 'package:finance_track/features/home/views/widgets/transactions_list.dart';
+import 'package:finance_track/features/home/views/widgets/transaction_action_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -28,11 +33,8 @@ class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => HomeCubit()
-        ..getHomeData(
-          userId: context.read<LoginCubit>().user?.id ?? '',
-          selectedMonth: DateTime.now(),
-        ),
+      create: (context) =>
+          HomeCubit()..getHomeData(selectedMonth: DateTime.now()),
 
       child: const HomeScreen(),
     );
@@ -48,7 +50,10 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late final ScrollController _scrollController;
-  bool isArrowDown = false;
+  bool isArrowDown = true;
+  CategoryModel? selectedCategory;
+  List<TransactionModel> filteredTransactions = [];
+
   bool isVoice = false;
   DateTime selectedDate = DateTime.now();
 
@@ -112,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _startListening() async {
     if (!_speechEnabled) return;
 
-    _hasNavigatedToEdit = false; // ← reset هنا
+    _hasNavigatedToEdit = false;
 
     await _speechToText.listen(
       localeId: 'ar_EG',
@@ -149,10 +154,16 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       builder: (context, state) {
         final cubit = context.read<HomeCubit>();
+        final List<TransactionModel> transactionsToShow =
+            filteredTransactions.isNotEmpty
+            ? filteredTransactions
+            : selectedCategory == null
+            ? state.transactions
+            : [];
 
         return Scaffold(
-          extendBodyBehindAppBar: true,
           backgroundColor: Colors.grey[100],
+
           body: Stack(
             children: [
               RefreshIndicator(
@@ -161,83 +172,50 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 color: Colors.white,
                 onRefresh: () async {
-                  await cubit.getHomeData(
-                    userId: context.read<LoginCubit>().user?.id ?? '',
-                    selectedMonth: selectedDate,
-                  );
+                  await cubit.getHomeData(selectedMonth: selectedDate);
                 },
                 child: CustomScrollView(
                   slivers: [
+                    SliverAppBar(
+                      actionsPadding: EdgeInsets.zero,
+
+                      backgroundColor: Colors.white.modify(
+                        colorCode: AppColors.mainAppColor,
+                      ),
+                      actions: [
+                        IconButton(
+                          icon: Icon(
+                            FontAwesomeIcons.chartLine,
+                            color: Colors.white,
+                          ),
+                          onPressed: () =>
+                              context.pushNamed(RoutesName.analyticsScreen),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            FontAwesomeIcons.gear,
+                            color: Colors.white,
+                          ),
+                          onPressed: () =>
+                              context.pushNamed(RoutesName.settingsScreen),
+                        ),
+                      ],
+                    ),
+
                     SliverToBoxAdapter(
                       child: Stack(
                         clipBehavior: Clip.none,
                         children: [
                           ClipPath(
                             clipper: BottomCurveClipper(),
-                            child: Container(
-                              width: double.infinity,
-                              height: 230.h,
-                              decoration: BoxDecoration(
-                                color: Colors.white.modify(
-                                  colorCode: AppColors.mainAppColor,
-                                ),
-                              ),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 16.w,
-                                vertical: 32.h,
-                              ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: RichText(
-                                      text: TextSpan(
-                                        children: [
-                                          TextSpan(
-                                            text: "${getGreetingMessage()}, ",
-                                            style: GoogleFonts.inter(
-                                              fontSize: 16.sp,
-                                              fontWeight: FontWeight.w300,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                          TextSpan(
-                                            text: "\n$userName",
-                                            style: GoogleFonts.inter(
-                                              fontSize: 20.sp,
-                                              fontWeight: FontWeight.w500,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  Card(
-                                    elevation: 2,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12.r),
-                                    ),
-                                    color: Colors.white.modify(
-                                      colorCode: AppColors.mainCardColor,
-                                    ),
-                                    child: IconButton(
-                                      icon: const Icon(
-                                        Icons.notifications,
-                                        color: Colors.white,
-                                      ),
-                                      onPressed: () {},
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                            child: HomeHeader(userName: userName),
                           ),
                           Positioned(
                             bottom: -80.h,
                             left: 20.w,
                             right: 20.w,
                             child: state.status.isLoading
-                                ? BalanceCardShimmer()
+                                ? const BalanceCardShimmer()
                                 : BalanceCard(
                                     totalBalance: state.summary.totalBalance,
                                     income: state.summary.totalIncome,
@@ -249,7 +227,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
 
                     SliverToBoxAdapter(child: SizedBox(height: 90.h)),
-                    // Month selector
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -296,103 +273,52 @@ class _HomeScreenState extends State<HomeScreen> {
                               titleAlignment: ListTileTitleAlignment.center,
                             ),
                             SizedBox(height: 8.h),
-                            SizedBox(
-                              height: 90.h,
-                              child: ListView.builder(
-                                controller: _scrollController,
-                                scrollDirection: Axis.horizontal,
-                                itemCount: 36,
-                                itemBuilder: (context, index) {
-                                  final now = DateTime.now();
-                                  final startMonth = now.month - 18;
-                                  final date = DateTime(
-                                    now.year,
-                                    startMonth + index,
-                                    1,
-                                  );
-                                  final isSelected =
-                                      date.month == selectedDate.month &&
-                                      date.year == selectedDate.year;
-
-                                  return GestureDetector(
-                                    onTap: () async {
-                                      setState(() => selectedDate = date);
-                                      await cubit.getHomeData(
-                                        userId:
-                                            context
-                                                .read<LoginCubit>()
-                                                .user
-                                                ?.id ??
-                                            '',
-                                        selectedMonth: selectedDate,
-                                      );
-                                    },
-                                    child: Container(
-                                      width: 120.w,
-                                      margin: EdgeInsets.symmetric(
-                                        horizontal: 6.w,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: isSelected
-                                            ? Colors.white.modify(
-                                                colorCode:
-                                                    AppColors.mainCardColor,
-                                              )
-                                            : Colors.grey.shade200,
-                                        borderRadius: BorderRadius.circular(
-                                          12.r,
-                                        ),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          DateFormat('MMM\nyyyy').format(date),
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 14.sp,
-                                            color: isSelected
-                                                ? Colors.white
-                                                : Colors.black87,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
+                            MonthSelector(
+                              controller: _scrollController,
+                              selectedDate: selectedDate,
+                              onSelect: (date) async {
+                                setState(() => selectedDate = date);
+                                await cubit.getHomeData(selectedMonth: date);
+                              },
                             ),
                           ],
                         ),
                       ),
                     ),
+                    isArrowDown
+                        ? SliverToBoxAdapter(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                                vertical: 8.h,
+                              ),
+                              child: CategoryFilterChips(
+                                transactions: state.transactions,
+                                selectedCategory: selectedCategory,
+                                onSelectionChanged: (category) {
+                                  setState(() {
+                                    selectedCategory = category;
+                                    if (category == null) {
+                                      filteredTransactions = [];
+                                    } else {
+                                      filteredTransactions = state.transactions
+                                          .where(
+                                            (t) =>
+                                                t.categoryName == category.name,
+                                          )
+                                          .toList();
+                                    }
+                                  });
+                                },
+                              ),
+                            ),
+                          )
+                        : const SliverToBoxAdapter(child: SizedBox.shrink()),
 
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: EdgeInsets.symmetric(horizontal: 8.w),
-                        child: ListTile(
-                          leading: Text(
-                            "Recent Transactions",
-                            style: GoogleFonts.inter(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          trailing: TextButton(
-                            style: TextButton.styleFrom(
-                              minimumSize: Size.zero,
-                              padding: EdgeInsets.zero,
-                            ),
-                            onPressed: () {},
-                            child: Text(
-                              "See All",
-                              style: GoogleFonts.inter(
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
-                        ),
+                        child: const RecentTransactionsHeader(),
                       ),
                     ),
 
@@ -400,7 +326,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       SliverPadding(
                         padding: EdgeInsets.symmetric(horizontal: 8.w),
                         sliver: SliverList.builder(
-                          itemCount: 6,
+                          itemCount: 3,
                           itemBuilder: (context, index) =>
                               const TransactionItemShimmer(),
                         ),
@@ -415,69 +341,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       )
                     else
-                      SlidableAutoCloseBehavior(
-                        child: SliverList.builder(
-                          itemCount: state.transactions.length,
-                          itemBuilder: (context, index) {
-                            final transaction = state.transactions[index];
-                            return Slidable(
-                              key: ValueKey(transaction.id),
-                              endActionPane: ActionPane(
-                                motion: const DrawerMotion(),
-                                extentRatio: 0.4,
-                                children: [
-                                  SlidableAction(
-                                    onPressed: (context) => context.pushNamed(
-                                      RoutesName.editTransactionScreen,
-                                      extra: transaction,
-                                    ),
-                                    backgroundColor: Theme.of(
-                                      context,
-                                    ).cardColor,
-                                    foregroundColor: Colors.blue,
-                                    icon: Icons.edit,
-                                    borderRadius: BorderRadius.circular(12.r),
-                                    label: 'Edit',
-                                  ),
-                                  SlidableAction(
-                                    onPressed: (context) {},
-                                    backgroundColor: Theme.of(
-                                      context,
-                                    ).cardColor,
-                                    foregroundColor: Colors.red,
-                                    icon: Icons.delete,
-                                    borderRadius: BorderRadius.circular(12.r),
-                                    label: 'Delete',
-                                  ),
-                                ],
-                              ),
-                              child: Card(
-                                elevation: 1,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12.r),
-                                ),
-                                child: ListTile(
-                                  title: Text(transaction.title),
-                                  subtitle: Text(
-                                    DateFormat(
-                                      'dd MMM yyyy',
-                                    ).format(transaction.date),
-                                  ),
-                                  trailing: Text(
-                                    '${transaction.type == "income" ? '+' : '-'} \$${transaction.amount}',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      color: transaction.type == "income"
-                                          ? Colors.green
-                                          : Colors.red,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
+                      TransactionsList(transactions: transactionsToShow),
                   ],
                 ),
               ),
@@ -508,7 +372,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                     child: Icon(
-                      Icons.mic,
+                      FontAwesomeIcons.microphone,
                       color: Colors.white,
                       size: 20.w + _soundLevel,
                     ),
@@ -519,44 +383,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   backgroundColor: Colors.white.modify(
                     colorCode: AppColors.mainAppColor,
                   ),
-                  child: const Icon(Icons.add, color: Colors.white),
+                  child: Icon(FontAwesomeIcons.plus, color: Colors.white),
                   onPressed: () {
                     showModalBottomSheet(
                       barrierLabel: 'Transaction Type',
                       isDismissible: true,
-                      backgroundColor: Colors.white.modify(
-                        colorCode: AppColors.mainAppColor,
-                      ),
+                      backgroundColor: Colors.transparent,
                       context: context,
-                      builder: (context) => Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            TransactionMethodsItem(
-                              text: 'Voice',
-                              icon: Icons.mic,
-                              onTap: () {
-                                setState(() {
-                                  context.pop();
-                                  _startListening();
-                                });
-                              },
-                            ),
-                            TransactionMethodsItem(
-                              text: 'Add Manual',
-                              icon: Icons.add,
-                              onTap: () => context.pushNamed(
-                                RoutesName.addTransactionScreen,
-                              ),
-                            ),
-                            TransactionMethodsItem(
-                              text: 'Scan Receipt',
-                              icon: Icons.qr_code_scanner,
-                              onTap: () {},
-                            ),
-                          ],
-                        ),
+                      builder: (context) => TransactionActionSheet(
+                        onVoice: () => _startListening(),
                       ),
                     );
                   },

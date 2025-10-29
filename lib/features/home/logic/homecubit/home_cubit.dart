@@ -9,10 +9,7 @@ class HomeCubit extends Cubit<HomeState> {
 
   final HomeRemoteData remoteData = HomeRemoteData();
 
-  Future<void> getHomeData({
-    required String userId,
-    required DateTime selectedMonth,
-  }) async {
+  Future<void> getHomeData({required DateTime selectedMonth}) async {
     emit(state.copyWith(status: HomeStatus.loading));
 
     try {
@@ -25,12 +22,10 @@ class HomeCubit extends Cubit<HomeState> {
 
       final results = await Future.wait([
         remoteData.getTransactions(
-          userId: userId,
           startDate: startOfMonth,
           endDate: endOfMonth,
         ),
         remoteData.getMonthlySummary(
-          userId: userId,
           startDate: startOfMonth,
           endDate: endOfMonth,
         ),

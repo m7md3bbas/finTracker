@@ -16,6 +16,11 @@ class HomeState {
   final List<TransactionModel> transactions;
   final MonthlySummary summary;
 
+  // 👇 Pagination fields
+  final int currentPage;
+  final bool hasMore;
+  final int limit;
+
   const HomeState({
     this.status = HomeStatus.initial,
     this.message,
@@ -25,6 +30,9 @@ class HomeState {
       totalExpense: 0,
       totalBalance: 0,
     ),
+    this.currentPage = 0,
+    this.hasMore = true,
+    this.limit = 20,
   });
 
   HomeState copyWith({
@@ -32,16 +40,22 @@ class HomeState {
     String? message,
     List<TransactionModel>? transactions,
     MonthlySummary? summary,
+    int? currentPage,
+    bool? hasMore,
+    int? limit,
   }) {
     return HomeState(
       status: status ?? this.status,
       message: message ?? this.message,
       transactions: transactions ?? this.transactions,
       summary: summary ?? this.summary,
+      currentPage: currentPage ?? this.currentPage,
+      hasMore: hasMore ?? this.hasMore,
+      limit: limit ?? this.limit,
     );
   }
 
   @override
   String toString() =>
-      'HomeState(status: $status, message: $message, transactions: ${transactions.length}, summary: $summary)';
+      'HomeState(status: $status, message: $message, transactions: ${transactions.length}, hasMore: $hasMore, currentPage: $currentPage)';
 }

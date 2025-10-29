@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 abstract class HomeServices {
   Future<List<TransactionModel>> getTransactions({
-    required String userId,
     required DateTime startDate,
     required DateTime endDate,
   });
@@ -16,7 +15,6 @@ abstract class HomeServices {
   Future<void> deleteTransaction(String transactionId);
 
   Future<MonthlySummary> getMonthlySummary({
-    required String userId,
     required DateTime startDate,
     required DateTime endDate,
   });
@@ -24,22 +22,19 @@ abstract class HomeServices {
 
 class HomeRemoteData implements HomeServices {
   final SupabaseClient supabaseClient = Supabase.instance.client;
-
   @override
   Future<List<TransactionModel>> getTransactions({
-    required String userId,
     required DateTime startDate,
     required DateTime endDate,
   }) async {
     final response = await supabaseClient.rpc(
       'get_monthly_transactions',
       params: {
-        'uid': userId,
+        'uid': supabaseClient.auth.currentUser!.id,
         'start_date': startDate.toIso8601String(),
         'end_date': endDate.toIso8601String(),
       },
     );
-
     final data = response as List;
     return data.map((e) => TransactionModel.fromJson(e)).toList();
   }
@@ -48,17 +43,19 @@ class HomeRemoteData implements HomeServices {
   Future<void> addTransaction(TransactionModel transaction) async {
     try {
       await supabaseClient.from('transactions').insert(transaction.toJson());
-    } on Exception catch (e) {
-      print(e);
-    }
+    } on Exception {}
   }
 
   @override
   Future<void> updateTransaction(TransactionModel transaction) async {
-    await supabaseClient
-        .from('transactions')
-        .update(transaction.toJson())
-        .eq('id', transaction.id ?? '');
+    try {
+      await supabaseClient
+          .from('transactions')
+          .upsert(transaction.toJson())
+          .eq('id', transaction.id ?? '');
+    } on Exception catch (e) {
+      print(e);
+    }
   }
 
   @override
@@ -68,7 +65,6 @@ class HomeRemoteData implements HomeServices {
 
   @override
   Future<MonthlySummary> getMonthlySummary({
-    required String userId,
     required DateTime startDate,
     required DateTime endDate,
   }) async {
@@ -76,7 +72,7 @@ class HomeRemoteData implements HomeServices {
         .rpc(
           'get_monthly_summary',
           params: {
-            'uid': userId,
+            'uid': supabaseClient.auth.currentUser?.id,
             'start_date': startDate.toIso8601String(),
             'end_date': endDate.toIso8601String(),
           },
