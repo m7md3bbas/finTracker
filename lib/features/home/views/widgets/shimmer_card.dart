@@ -9,9 +9,7 @@ class BalanceCardShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color cardColor = Colors.white.modify(
-      colorCode: AppColors.mainCardColor,
-    );
+    final cardColor = Colors.white.modify(colorCode: AppColors.mainCardColor);
 
     return Container(
       width: double.infinity,
@@ -21,11 +19,12 @@ class BalanceCardShimmer extends StatelessWidget {
         borderRadius: BorderRadius.circular(20.r),
       ),
       child: Shimmer.fromColors(
-        baseColor: Colors.white.withOpacity(0.4),
-        highlightColor: Colors.white.withOpacity(0.8),
+        baseColor: Colors.white.withOpacity(0.3),
+        highlightColor: Colors.white.withOpacity(0.7),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -42,8 +41,30 @@ class BalanceCardShimmer extends StatelessWidget {
             ),
             SizedBox(height: 12.h),
 
-            Container(height: 32.h, width: 150.w, color: Colors.white),
+            // Balance
+            Container(height: 32.h, width: 160.w, color: Colors.white),
+            SizedBox(height: 20.h),
+
+            // Budget progress bar
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(height: 14.h, width: 80.w, color: Colors.white),
+                Container(height: 14.h, width: 80.w, color: Colors.white),
+              ],
+            ),
+            SizedBox(height: 8.h),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6.r),
+              child: Container(
+                height: 6.h,
+                width: double.infinity,
+                color: Colors.white,
+              ),
+            ),
             SizedBox(height: 24.h),
+
+            // Income & Expenses
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -69,8 +90,6 @@ class BalanceCardShimmer extends StatelessWidget {
                     ),
                   ],
                 ),
-
-                // Expenses
                 Row(
                   children: [
                     Container(height: 20.w, width: 20.w, color: Colors.white),

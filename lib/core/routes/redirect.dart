@@ -1,7 +1,7 @@
 part of 'app_routes.dart';
 
 FutureOr<String?> getRedirect(BuildContext context, GoRouterState state) async {
-  final isAuthenticated = context.read<LoginCubit>().user;
+  final isAuthenticated = context.read<UserCubit>().user;
   final login = state.matchedLocation == RoutesPath.signInScreen;
   final signUp = state.matchedLocation == RoutesPath.signUpScreen;
   final newUsersQuestions =

@@ -29,5 +29,5 @@ void main() async {
       return true;
     };
   });
-  runApp(DevicePreview(enabled: true, builder: (context) => FinTracker()));
+  runApp(FinTracker());
 }

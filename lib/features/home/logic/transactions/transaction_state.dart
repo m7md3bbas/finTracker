@@ -1,27 +1,27 @@
 import 'package:finance_track/core/models/transactions_model.dart';
 import 'package:flutter/foundation.dart';
 
-enum Transactionstatus { initial, loading, success, error }
+enum TransactionStatus { initial, loading, success, error }
 
-extension TransactionstatusX on Transactionstatus {
-  bool get isInitial => this == Transactionstatus.initial;
-  bool get isLoading => this == Transactionstatus.loading;
-  bool get isSuccess => this == Transactionstatus.success;
-  bool get isError => this == Transactionstatus.error;
+extension TransactionStatusX on TransactionStatus {
+  bool get isInitial => this == TransactionStatus.initial;
+  bool get isLoading => this == TransactionStatus.loading;
+  bool get isSuccess => this == TransactionStatus.success;
+  bool get isError => this == TransactionStatus.error;
 }
 
 class TransactionState {
-  final Transactionstatus status;
+  final TransactionStatus status;
   final List<TransactionModel> transactions;
   final String? message;
   TransactionState({
-    this.status = Transactionstatus.initial,
+    this.status = TransactionStatus.initial,
     this.message,
     this.transactions = const [],
   });
 
   TransactionState copyWith({
-    Transactionstatus? status,
+    TransactionStatus? status,
     String? message,
     List<TransactionModel>? transactions,
   }) {

@@ -7,8 +7,10 @@ import 'package:finance_track/core/utils/helper/analysis_text/analysis.dart';
 import 'package:finance_track/core/utils/helper/ui/customcurvecliper.dart';
 import 'package:finance_track/core/utils/popups/toast.dart';
 import 'package:finance_track/features/auth/logic/login/login_cubit.dart';
+import 'package:finance_track/features/auth/logic/user/user_cubit.dart';
 import 'package:finance_track/features/home/logic/homecubit/home_cubit.dart';
 import 'package:finance_track/features/home/logic/homecubit/home_states.dart';
+import 'package:finance_track/features/home/logic/transactions/transaction_cubit.dart';
 import 'package:finance_track/features/home/views/widgets/cardexpensesandincome.dart';
 import 'package:finance_track/features/home/views/widgets/shimmer_card.dart';
 import 'package:finance_track/features/home/views/widgets/transaction_shimmer_item.dart';
@@ -36,7 +38,10 @@ class Home extends StatelessWidget {
       create: (context) =>
           HomeCubit()..getHomeData(selectedMonth: DateTime.now()),
 
-      child: const HomeScreen(),
+      child: BlocProvider(
+        create: (context) => TransactionCubit(),
+        child: const HomeScreen(),
+      ),
     );
   }
 }
@@ -79,7 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
         if (status == 'done' || status == 'notListening') {
           if (mounted) {
             setState(() => isVoice = false);
-            await _stopListening(); // ← هنا ننادي stop اللي فيها التحليل والتنقل
+            await _stopListening();
           }
         }
       },
@@ -100,13 +105,15 @@ class _HomeScreenState extends State<HomeScreen> {
       _hasNavigatedToEdit = true;
       final transactionModel = parseTransactionFromText(
         _lastWords,
-        context.read<LoginCubit>().user?.id ?? '',
+        context.read<UserCubit>().user?.id ?? '',
       );
 
       if ((transactionModel?.title.isNotEmpty ?? false) && mounted) {
-        context.pushNamed(
-          RoutesName.editTransactionScreen,
-          extra: transactionModel,
+        await context.read<TransactionCubit>().addTransaction(
+          transactionModel!,
+        );
+        await context.read<HomeCubit>().getHomeData(
+          selectedMonth: DateTime.now(),
         );
       }
     }
@@ -120,7 +127,8 @@ class _HomeScreenState extends State<HomeScreen> {
     _hasNavigatedToEdit = false;
 
     await _speechToText.listen(
-      localeId: 'ar_EG',
+      localeId:
+          context.read<UserCubit>().user?.userMetadata?['lang'] ?? 'en-US',
       onResult: _onSpeechResult,
       onSoundLevelChange: (level) {
         setState(() => _soundLevel = level);
@@ -144,7 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final userName =
-        context.read<LoginCubit>().user?.userMetadata?['name'] ?? '';
+        context.read<UserCubit>().user?.userMetadata?['name'] ?? '';
 
     return BlocConsumer<HomeCubit, HomeState>(
       listener: (context, state) {
@@ -172,7 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 color: Colors.white,
                 onRefresh: () async {
-                  await cubit.getHomeData(selectedMonth: selectedDate);
+                  return await cubit.getHomeData(selectedMonth: selectedDate);
                 },
                 child: CustomScrollView(
                   slivers: [
@@ -182,6 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       backgroundColor: Colors.white.modify(
                         colorCode: AppColors.mainAppColor,
                       ),
+
                       actions: [
                         IconButton(
                           icon: Icon(
@@ -211,7 +220,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: HomeHeader(userName: userName),
                           ),
                           Positioned(
-                            bottom: -80.h,
+                            bottom: -110.h,
                             left: 20.w,
                             right: 20.w,
                             child: state.status.isLoading
@@ -220,13 +229,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                     totalBalance: state.summary.totalBalance,
                                     income: state.summary.totalIncome,
                                     expenses: state.summary.totalExpense,
+                                    remainingBudget:
+                                        state.summary.remainingBudget ?? 0,
+                                    monthlyBudget:
+                                        state.summary.monthlyBudget ?? 0,
+                                    selectedDate: selectedDate,
                                   ),
                           ),
                         ],
                       ),
                     ),
 
-                    SliverToBoxAdapter(child: SizedBox(height: 90.h)),
+                    SliverToBoxAdapter(child: SizedBox(height: 110.h)),
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.w),

@@ -226,9 +226,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
         type: isExpense ? 'expense' : 'income',
       );
 
-      await context.read<TransactionCubit>().updateTransaction(
-        updatedTransaction,
-      );
+      context.read<TransactionCubit>().updateTransaction(updatedTransaction);
     }
   }
 
@@ -248,7 +246,10 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
         return Scaffold(
           backgroundColor: bgColor,
           appBar: AppBar(
-            leading: BackButton(color: Colors.white),
+            leading: BackButton(
+              color: Colors.white,
+              onPressed: () => context.pop(),
+            ),
             backgroundColor: accentColor,
             title: Text(
               isExpense ? 'Edit Expense' : 'Edit Income',
@@ -356,7 +357,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                             ),
                           ),
                           SizedBox(height: 20.h),
-                          CustomTextfomfield(
+                          CustomTextFormField(
                             labelText: 'Title',
                             controller: _titleController,
                             hintText: 'Title',
@@ -364,7 +365,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                             validator: (v) => v!.isEmpty ? 'Enter title' : null,
                           ),
                           SizedBox(height: 16.h),
-                          CustomTextfomfield(
+                          CustomTextFormField(
                             labelText: 'Amount',
                             controller: _amountController,
                             keyboardType: TextInputType.number,
@@ -430,7 +431,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                             ),
                           ),
                           SizedBox(height: 16.h),
-                          CustomTextfomfield(
+                          CustomTextFormField(
                             labelText: 'Note',
                             controller: _noteController,
                             keyboardType: TextInputType.text,

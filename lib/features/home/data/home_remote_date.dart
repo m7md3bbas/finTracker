@@ -1,3 +1,4 @@
+import 'package:finance_track/core/models/budget_model.dart';
 import 'package:finance_track/core/models/getmonthlysummary_model.dart';
 import 'package:finance_track/core/models/transactions_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -22,6 +23,7 @@ abstract class HomeServices {
 
 class HomeRemoteData implements HomeServices {
   final SupabaseClient supabaseClient = Supabase.instance.client;
+
   @override
   Future<List<TransactionModel>> getTransactions({
     required DateTime startDate,
@@ -32,7 +34,7 @@ class HomeRemoteData implements HomeServices {
       params: {
         'uid': supabaseClient.auth.currentUser!.id,
         'start_date': startDate.toIso8601String(),
-        'end_date': endDate.toIso8601String(),
+        'end_date': endDate.add(Duration(days: 1)).toIso8601String(),
       },
     );
     final data = response as List;
@@ -41,21 +43,15 @@ class HomeRemoteData implements HomeServices {
 
   @override
   Future<void> addTransaction(TransactionModel transaction) async {
-    try {
-      await supabaseClient.from('transactions').insert(transaction.toJson());
-    } on Exception {}
+    await supabaseClient.from('transactions').insert(transaction.toJson());
   }
 
   @override
   Future<void> updateTransaction(TransactionModel transaction) async {
-    try {
-      await supabaseClient
-          .from('transactions')
-          .upsert(transaction.toJson())
-          .eq('id', transaction.id ?? '');
-    } on Exception catch (e) {
-      print(e);
-    }
+    await supabaseClient
+        .from('transactions')
+        .update(transaction.toJson())
+        .eq('id', transaction.id ?? '');
   }
 
   @override
@@ -84,6 +80,8 @@ class HomeRemoteData implements HomeServices {
         totalIncome: 0,
         totalExpense: 0,
         totalBalance: 0,
+        monthlyBudget: 0,
+        remainingBudget: 0,
       );
     }
 

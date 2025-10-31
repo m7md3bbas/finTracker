@@ -101,13 +101,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           spacing: 10.w,
                           children: [
                             Expanded(
-                              child: CustomTextfomfield(
+                              child: CustomTextFormField(
                                 controller: _fnameController,
                                 hintText: ' First Name',
                               ),
                             ),
                             Expanded(
-                              child: CustomTextfomfield(
+                              child: CustomTextFormField(
                                 controller: _lnameController,
                                 hintText: ' Last Name',
                               ),
@@ -116,14 +116,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ),
 
                         SizedBox(height: 20.h),
-                        CustomTextfomfield(
+                        CustomTextFormField(
                           controller: _emailController,
                           hintText: 'Email',
                           obscureText: false,
                           keyboardType: TextInputType.emailAddress,
                         ),
                         SizedBox(height: 20.h),
-                        CustomTextfomfield(
+                        CustomTextFormField(
                           controller: _passwordController,
                           hintText: 'Password',
                           obscureText: obsecureText,

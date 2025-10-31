@@ -1,4 +1,3 @@
-
 class RoutesName {
   static const onboardingScreen = 'onboarding-screen';
   static const newUsersQuestionsScreen = 'new-users-questions-screen';
@@ -12,4 +11,5 @@ class RoutesName {
   static const editTransactionScreen = 'edit-transaction-screen';
   static const transactionDetailsScreen = 'transaction-details-screen';
   static const analyticsScreen = 'analytics-Screen';
+  static const notificationScreen = 'notification-screen';
 }

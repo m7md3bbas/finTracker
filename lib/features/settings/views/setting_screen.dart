@@ -6,6 +6,7 @@ import 'package:finance_track/core/utils/colors/app_colors.dart';
 import 'package:finance_track/core/utils/helper/ui/customcurvecliper.dart';
 import 'package:finance_track/core/utils/popups/toast.dart';
 import 'package:finance_track/features/auth/logic/login/login_cubit.dart';
+import 'package:finance_track/features/auth/logic/user/user_cubit.dart';
 import 'package:finance_track/features/settings/logic/image/image_cubit.dart';
 import 'package:finance_track/features/settings/logic/image/image_state.dart';
 import 'package:flutter/material.dart';
@@ -56,7 +57,7 @@ class _SettingScreenState extends State<SettingScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final img = await SharedPref().getProfilePicture();
       if (img == null) {
-        context.read<ImageCubit>().getImage();
+        context.read<ImageCubit>().imageUrl;
       } else {
         context.read<ImageCubit>().setImageUrl(img);
       }
@@ -156,7 +157,7 @@ class _SettingScreenState extends State<SettingScreen> {
                               SizedBox(height: 16.h),
                               Text(
                                 context
-                                        .read<LoginCubit>()
+                                        .read<UserCubit>()
                                         .user
                                         ?.userMetadata?['name'] ??
                                     '',
@@ -167,7 +168,7 @@ class _SettingScreenState extends State<SettingScreen> {
                               ),
                               SizedBox(height: 8.h),
                               Text(
-                                context.read<LoginCubit>().user?.email ?? '',
+                                context.read<UserCubit>().user?.email ?? '',
                                 style: GoogleFonts.inter(
                                   fontSize: 14.sp,
                                   color: Colors.white,

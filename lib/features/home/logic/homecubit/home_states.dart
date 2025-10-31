@@ -1,3 +1,4 @@
+import 'package:finance_track/core/models/budget_model.dart';
 import 'package:finance_track/core/models/transactions_model.dart';
 import 'package:finance_track/core/models/getmonthlysummary_model.dart';
 
@@ -14,12 +15,10 @@ class HomeState {
   final HomeStatus status;
   final String? message;
   final List<TransactionModel> transactions;
+
   final MonthlySummary summary;
 
   // 👇 Pagination fields
-  final int currentPage;
-  final bool hasMore;
-  final int limit;
 
   const HomeState({
     this.status = HomeStatus.initial,
@@ -29,10 +28,9 @@ class HomeState {
       totalIncome: 0,
       totalExpense: 0,
       totalBalance: 0,
+      monthlyBudget: 0,
+      remainingBudget: 0,
     ),
-    this.currentPage = 0,
-    this.hasMore = true,
-    this.limit = 20,
   });
 
   HomeState copyWith({
@@ -49,13 +47,10 @@ class HomeState {
       message: message ?? this.message,
       transactions: transactions ?? this.transactions,
       summary: summary ?? this.summary,
-      currentPage: currentPage ?? this.currentPage,
-      hasMore: hasMore ?? this.hasMore,
-      limit: limit ?? this.limit,
     );
   }
 
   @override
   String toString() =>
-      'HomeState(status: $status, message: $message, transactions: ${transactions.length}, hasMore: $hasMore, currentPage: $currentPage)';
+      'HomeState(status: $status, message: $message, transactions: ${transactions.length},)';
 }

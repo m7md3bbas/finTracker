@@ -5,6 +5,8 @@ import 'package:finance_track/core/utils/customs/textformfield/custom_textfomfie
 import 'package:finance_track/core/utils/helper/category/category_list.dart';
 import 'package:finance_track/core/utils/popups/toast.dart';
 import 'package:finance_track/features/auth/logic/login/login_cubit.dart';
+import 'package:finance_track/features/auth/logic/user/user_cubit.dart';
+import 'package:finance_track/features/home/logic/homecubit/home_cubit.dart';
 import 'package:finance_track/features/home/logic/transactions/transaction_cubit.dart';
 import 'package:finance_track/features/home/logic/transactions/transaction_state.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +21,10 @@ class AddTransaction extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => TransactionCubit(),
-      child: AddTransactionScreen(),
+      child: BlocProvider(
+        create: (context) => HomeCubit(),
+        child: AddTransactionScreen(),
+      ),
     );
   }
 }
@@ -93,7 +98,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 🔹 خط صغير فوق كعلامة للسحب
               Container(
                 height: 5,
                 width: 40,
@@ -109,13 +113,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               ),
               SizedBox(height: 10.h),
 
-              // 🔹 شبكة التصنيفات
               Flexible(
                 child: GridView.builder(
                   shrinkWrap: true,
                   itemCount: filtered.length,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
+                    crossAxisCount: 3,
                     mainAxisSpacing: 8,
                     crossAxisSpacing: 8,
                   ),
@@ -187,7 +190,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
       try {
         final transaction = TransactionModel(
-          userId: context.read<LoginCubit>().user?.id ?? '',
+          userId: context.read<UserCubit>().user?.id ?? '',
           title: _titleController.text.trim(),
           categoryName: _selectedCategory!.name,
           amount: amount,
@@ -201,7 +204,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         await context.read<TransactionCubit>().addTransaction(transaction);
       } catch (e) {
         ToastNotifier.showError("Failed to add transaction: $e");
-        print(e);
       }
     }
   }
@@ -309,18 +311,22 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     ),
                     SizedBox(height: 20.h),
 
-                    CustomTextfomfield(
+                    CustomTextFormField(
                       controller: _titleController,
-                      hintText: 'Title',
+                      hintText: isExpense
+                          ? 'What did you spend on?'
+                          : 'What did you get?',
+                      labelText: "Description",
                       keyboardType: TextInputType.text,
                       validator: (v) => v!.isEmpty ? 'Enter title' : null,
                     ),
                     SizedBox(height: 16.h),
 
-                    CustomTextfomfield(
+                    CustomTextFormField(
                       controller: _amountController,
                       keyboardType: TextInputType.number,
                       hintText: 'Amount',
+                      labelText: "Amount",
                       validator: (v) => v!.isEmpty ? 'Enter amount' : null,
                     ),
                     SizedBox(height: 16.h),
@@ -378,7 +384,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
                     SizedBox(height: 16.h),
 
-                    CustomTextfomfield(
+                    CustomTextFormField(
                       controller: _noteController,
                       keyboardType: TextInputType.text,
                       maxLines: 3,

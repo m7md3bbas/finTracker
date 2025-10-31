@@ -31,14 +31,5 @@ class ImageCubit extends Cubit<ImageState> {
     }
   }
 
-  void getImage() async {
-    emit(state.copyWith(status: ImageStatus.loading));
-    try {
-      await Future.delayed(const Duration(seconds: 2));
-      final image = await remoteData.getImage();
-      emit(state.copyWith(status: ImageStatus.success, imageUrl: image));
-    } catch (e) {
-      emit(state.copyWith(status: ImageStatus.error, message: e.toString()));
-    }
-  }
+  get imageUrl async => await remoteData.getImage();
 }

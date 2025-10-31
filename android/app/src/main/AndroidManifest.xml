@@ -10,7 +10,7 @@
         </intent>
     </queries>
     <application
-        android:label="finance_track"
+        android:label="Money Talk"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

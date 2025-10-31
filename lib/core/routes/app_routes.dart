@@ -4,13 +4,14 @@ import 'package:finance_track/core/models/transactions_model.dart';
 import 'package:finance_track/core/routes/routes_name.dart';
 import 'package:finance_track/core/routes/routes_path.dart';
 import 'package:finance_track/core/utils/caching/shared_pref.dart';
-import 'package:finance_track/features/auth/logic/login/login_cubit.dart';
+import 'package:finance_track/features/auth/logic/user/user_cubit.dart';
 import 'package:finance_track/features/auth/views/sign_in_screen.dart';
 import 'package:finance_track/features/auth/views/sign_up_screen.dart';
 import 'package:finance_track/features/home/views/analysis_screen.dart';
 import 'package:finance_track/features/home/views/home_screen.dart';
 import 'package:finance_track/features/home/views/widgets/add_transaction_screen.dart';
 import 'package:finance_track/features/home/views/widgets/edit_transaction_screen.dart';
+import 'package:finance_track/features/notifications/screen/notification_screen.dart';
 import 'package:finance_track/features/onboarding/views/new_users_questions.dart';
 import 'package:finance_track/features/onboarding/views/onboarding_screen.dart';
 import 'package:finance_track/features/settings/views/setting_screen.dart';
@@ -74,6 +75,11 @@ class AppRoutes {
         path: RoutesName.analyticsScreen,
         name: RoutesName.analyticsScreen,
         builder: (context, state) => const Analysis(),
+      ),
+      GoRoute(
+        path: RoutesPath.notificationScreen,
+        name: RoutesName.notificationScreen,
+        builder: (context, state) => const Notification(),
       ),
     ],
   );

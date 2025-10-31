@@ -5,63 +5,63 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class TransactionCubit extends Cubit<TransactionState> {
   TransactionCubit()
-    : super(TransactionState(status: Transactionstatus.initial));
+    : super(TransactionState(status: TransactionStatus.initial));
 
   final remoteData = HomeRemoteData();
 
   Future<void> addTransaction(TransactionModel transaction) async {
-    emit(state.copyWith(status: Transactionstatus.loading));
+    emit(state.copyWith(status: TransactionStatus.loading));
     try {
       await Future.delayed(const Duration(seconds: 2), () async {
         await remoteData.addTransaction(transaction);
       });
       emit(
         state.copyWith(
-          status: Transactionstatus.success,
+          status: TransactionStatus.success,
           message: "Transaction added successfully",
         ),
       );
     } catch (e) {
       emit(
-        state.copyWith(status: Transactionstatus.error, message: e.toString()),
+        state.copyWith(status: TransactionStatus.error, message: e.toString()),
       );
     }
   }
 
   Future<void> updateTransaction(TransactionModel transaction) async {
-    emit(state.copyWith(status: Transactionstatus.loading));
+    emit(state.copyWith(status: TransactionStatus.loading));
     try {
       await Future.delayed(const Duration(seconds: 2), () async {
         await remoteData.updateTransaction(transaction);
       });
       emit(
         state.copyWith(
-          status: Transactionstatus.success,
+          status: TransactionStatus.success,
           message: "Transaction updated successfully",
         ),
       );
     } catch (e) {
       emit(
-        state.copyWith(status: Transactionstatus.error, message: e.toString()),
+        state.copyWith(status: TransactionStatus.error, message: e.toString()),
       );
     }
   }
 
   Future<void> deleteTransaction(String transactionId) async {
-    emit(state.copyWith(status: Transactionstatus.loading));
+    emit(state.copyWith(status: TransactionStatus.loading));
     try {
       await Future.delayed(const Duration(seconds: 2), () async {
         await remoteData.deleteTransaction(transactionId);
       });
       emit(
         state.copyWith(
-          status: Transactionstatus.success,
+          status: TransactionStatus.success,
           message: "Transaction deleted successfully",
         ),
       );
     } catch (e) {
       emit(
-        state.copyWith(status: Transactionstatus.error, message: e.toString()),
+        state.copyWith(status: TransactionStatus.error, message: e.toString()),
       );
     }
   }

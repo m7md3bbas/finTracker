@@ -1,8 +1,10 @@
 import 'package:finance_track/core/extentions/modified_colors.dart';
+import 'package:finance_track/core/routes/routes_name.dart';
 import 'package:finance_track/core/utils/colors/app_colors.dart';
 import 'package:finance_track/core/utils/helper/greatings/greating_function.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class HomeHeader extends StatelessWidget {
@@ -59,7 +61,8 @@ class HomeHeader extends StatelessWidget {
                   children: [
                     IconButton(
                       icon: Icon(Icons.notifications, color: Colors.white),
-                      onPressed: () {},
+                      onPressed: () =>
+                          context.pushNamed(RoutesName.notificationScreen),
                     ),
                     Positioned(
                       top: 8,

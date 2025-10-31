@@ -89,7 +89,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           ),
                         ),
                         SizedBox(height: 20.h),
-                        CustomTextfomfield(
+                        CustomTextFormField(
                           controller: _emailController,
                           hintText: 'Email',
                           keyboardType: TextInputType.emailAddress,
@@ -102,7 +102,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           },
                         ),
                         SizedBox(height: 20.h),
-                        CustomTextfomfield(
+                        CustomTextFormField(
                           controller: _passwordController,
                           hintText: 'Password',
                           obscureText: obscureText,

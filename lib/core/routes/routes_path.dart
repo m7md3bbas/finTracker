@@ -8,4 +8,5 @@ class RoutesPath {
   static const editTransactionScreen = '/edit-transaction-screen';
   static const settingScreen = '/setting-screen';
   static const analyticsScreen = '/analytics-screen';
+  static const notificationScreen = '/notification-screen';
 }

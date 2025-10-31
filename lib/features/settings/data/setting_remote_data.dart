@@ -42,8 +42,6 @@ class SettingRemoteData {
           .from('profile_images')
           .getPublicUrl(filePath);
 
-      print(imageUrl);
-
       await supabaseClient.auth
           .updateUser(UserAttributes(data: {'profile_photo': imageUrl}))
           .then((value) {

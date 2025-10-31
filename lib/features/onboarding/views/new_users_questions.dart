@@ -4,8 +4,11 @@ import 'package:finance_track/core/utils/caching/shared_pref.dart';
 import 'package:finance_track/core/utils/colors/app_colors.dart';
 import 'package:finance_track/core/utils/customs/custom_buttons/custom_button.dart';
 import 'package:finance_track/core/utils/popups/toast.dart';
+import 'package:finance_track/features/onboarding/logic/onboarding_cubit.dart';
+import 'package:finance_track/features/onboarding/logic/onboarding_state.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -15,7 +18,10 @@ class NewUsersQuestions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const NewUsersQuestionsScreen();
+    return BlocProvider(
+      create: (context) => OnboardingCubit(),
+      child: const NewUsersQuestionsScreen(),
+    );
   }
 }
 
@@ -143,7 +149,7 @@ class _NewUsersQuestionsScreenState extends State<NewUsersQuestionsScreen> {
               ),
               SizedBox(height: 10.h),
               Text(
-                "Select your country",
+                "Select your Speaking Language",
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18.sp,
@@ -168,6 +174,21 @@ class _NewUsersQuestionsScreenState extends State<NewUsersQuestionsScreen> {
                         setState(() => _selectedCountryLang = country);
                         Navigator.pop(context);
                       },
+
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        spacing: 10.w,
+                        children: [
+                          Text(country['code']),
+                          Text(
+                            _selectedCountryLang?['code'] == country['code']
+                                ? '✔️'
+                                : '',
+                            style: TextStyle(fontSize: 20.sp),
+                          ),
+                        ],
+                      ),
                     );
                   },
                 ),
@@ -206,7 +227,7 @@ class _NewUsersQuestionsScreenState extends State<NewUsersQuestionsScreen> {
               SizedBox(height: 40.h),
 
               Text(
-                "🌍 Select your country",
+                "🌍speaking language",
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
@@ -218,7 +239,7 @@ class _NewUsersQuestionsScreenState extends State<NewUsersQuestionsScreen> {
                 onTap: _showCountryPicker,
                 child: _buildInputBox(
                   text: _selectedCountryLang == null
-                      ? "Choose your country"
+                      ? "Choose your speaking language"
                       : "${_selectedCountryLang!['icon']}  ${_selectedCountryLang!['country']}",
                   icon: Icons.flag_circle_outlined,
                 ),
@@ -247,22 +268,61 @@ class _NewUsersQuestionsScreenState extends State<NewUsersQuestionsScreen> {
 
               const Spacer(),
 
-              CustomButton(
-                text: 'Continue',
-                color: Colors.white.modify(colorCode: AppColors.mainAppColor),
-                onPressed: () {
-                  if (_selectedCountryLang == null || _selectedDate == null) {
-                    ToastNotifier.showError('Please select all fields.');
-                    return;
+              BlocConsumer<OnboardingCubit, OnboardingState>(
+                listenWhen: (previous, current) =>
+                    previous.status != current.status,
+                listener: (context, state) {
+                  if (state.status == OnboardingStatus.success) {
+                    ToastNotifier.showSuccess(state.message ?? '');
+                    Future.wait([
+                      SharedPref().saveSpeakLang(
+                        _selectedCountryLang?['code']!,
+                      ),
+                      SharedPref().saveStarterMonth(
+                        DateFormat('yyyy-MM').format(_selectedDate!),
+                      ),
+                    ]);
+                    context.goNamed(RoutesName.homeScreen);
                   }
-                  Future.wait([
-                    SharedPref().saveSpeakLang(_selectedCountryLang?['code']!),
-                    SharedPref().saveStarterMonth(
-                      DateFormat('yyyy-MM').format(_selectedDate!),
-                    ),
-                  ]);
-                  context.goNamed(RoutesName.homeScreen);
+                  if (state.status == OnboardingStatus.error) {
+                    ToastNotifier.showError(
+                      state.message ??
+                          'Something went wrong. Please try again later.',
+                    );
+                  }
                 },
+                builder: (context, state) =>
+                    state.status == OnboardingStatus.loading
+                    ? Center(
+                        child: CircularProgressIndicator(
+                          color: Colors.white.modify(
+                            colorCode: AppColors.mainAppColor,
+                          ),
+                        ),
+                      )
+                    : CustomButton(
+                        text: 'Continue',
+                        color: Colors.white.modify(
+                          colorCode: AppColors.mainAppColor,
+                        ),
+                        onPressed: () async {
+                          if (_selectedCountryLang == null ||
+                              _selectedDate == null) {
+                            ToastNotifier.showError(
+                              'Please select all fields.',
+                            );
+                            return;
+                          }
+                          context
+                              .read<OnboardingCubit>()
+                              .saveSpeakingLangAndStarterMonthly(
+                                lang: _selectedCountryLang?['code']!,
+                                month: DateFormat(
+                                  'yyyy-MM',
+                                ).format(_selectedDate!),
+                              );
+                        },
+                      ),
               ),
               SizedBox(height: 40.h),
             ],

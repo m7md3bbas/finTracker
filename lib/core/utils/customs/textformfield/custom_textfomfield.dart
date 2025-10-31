@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class CustomTextfomfield extends StatelessWidget {
-  const CustomTextfomfield({
+class CustomTextFormField extends StatelessWidget {
+  const CustomTextFormField({
     super.key,
     required this.controller,
     this.validator,
@@ -11,6 +11,7 @@ class CustomTextfomfield extends StatelessWidget {
     this.expands,
     required this.hintText,
     this.suffixIcon,
+    this.prefix,
     this.maxLines,
     this.minLines,
     this.labelText,
@@ -23,6 +24,7 @@ class CustomTextfomfield extends StatelessWidget {
   final bool? expands;
   final String hintText;
   final Widget? suffixIcon;
+  final Widget? prefix;
   final int? maxLines;
   final int? minLines;
   final String? labelText;
@@ -30,12 +32,16 @@ class CustomTextfomfield extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      autofocus: true,
       keyboardType: keyboardType,
       maxLines: obscureText ? 1 : maxLines,
       minLines: minLines,
       decoration: InputDecoration(
+        contentPadding: const EdgeInsets.all(10),
+        prefix: prefix,
         labelText: labelText,
         suffixIcon: suffixIcon,
+
         hintText: hintText,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(radius)),
         focusedBorder: OutlineInputBorder(
