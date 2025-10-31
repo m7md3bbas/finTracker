@@ -1,3 +1,4 @@
+import 'package:finance_track/core/utils/network/internet_connection.dart';
 import 'package:finance_track/features/onboarding/data/onboarding_remote_data.dart';
 import 'package:finance_track/features/onboarding/logic/onboarding_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -6,6 +7,7 @@ class OnboardingCubit extends Cubit<OnboardingState> {
   OnboardingCubit() : super(OnboardingState(status: OnboardingStatus.initial));
 
   final remoteData = OnboardingRemoteData();
+  final NetworkInfo networkInfo = NetworkInfo();
 
   void saveSpeakingLangAndStarterMonthly({
     required String lang,
@@ -13,6 +15,10 @@ class OnboardingCubit extends Cubit<OnboardingState> {
   }) async {
     emit(state.copyWith(status: OnboardingStatus.loading));
     try {
+      // Check internet connection before making API call
+      if (!await networkInfo.isConnected()) {
+        throw NoInternetException();
+      }
       await remoteData.saveSpeakingLangAndStarterMonthly(
         lang: lang,
         month: month,

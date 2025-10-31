@@ -1,4 +1,3 @@
-import 'package:finance_track/core/models/budget_model.dart';
 import 'package:finance_track/core/models/getmonthlysummary_model.dart';
 import 'package:finance_track/core/models/transactions_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -70,7 +69,7 @@ class HomeRemoteData implements HomeServices {
           params: {
             'uid': supabaseClient.auth.currentUser?.id,
             'start_date': startDate.toIso8601String(),
-            'end_date': endDate.toIso8601String(),
+            'end_date': endDate.add(Duration(days: 1)).toIso8601String(),
           },
         )
         .select();

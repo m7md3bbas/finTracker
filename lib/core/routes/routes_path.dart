@@ -7,6 +7,6 @@ class RoutesPath {
   static const addTransactionScreen = '/add-transaction-screen';
   static const editTransactionScreen = '/edit-transaction-screen';
   static const settingScreen = '/setting-screen';
-  static const analyticsScreen = '/analytics-screen';
+  static const analysisScreen = '/analysis-screen';
   static const notificationScreen = '/notification-screen';
 }
