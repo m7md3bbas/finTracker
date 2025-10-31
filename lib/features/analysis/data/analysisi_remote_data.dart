@@ -14,16 +14,13 @@ class AnalysisService {
         params: {
           'uid': supabase.auth.currentUser?.id,
           'start_date': startDate.toIso8601String(),
-          'end_date': endDate.toIso8601String(),
+          'end_date': endDate.add(Duration(days: 1)).toIso8601String(),
         },
       );
-
-      print('getUserAnalysis response: $response');
 
       if (response == null || (response as List).isEmpty) return null;
       return AnalysisModel.fromJson(Map<String, dynamic>.from(response[0]));
     } catch (e) {
-      print('Error in getUserAnalysis: $e');
       return null;
     }
   }

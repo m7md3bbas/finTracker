@@ -1,13 +1,19 @@
 class CategoryBreakdown {
   final String category;
   final double amount;
+  final int transactions;
 
-  CategoryBreakdown({required this.category, required this.amount});
+  CategoryBreakdown({
+    required this.category,
+    required this.amount,
+    required this.transactions,
+  });
 
   factory CategoryBreakdown.fromJson(Map<String, dynamic> json) {
     return CategoryBreakdown(
       category: json['category'] ?? "Other",
       amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
+      transactions: (json['transactions'] as num?)?.toInt() ?? 0,
     );
   }
 }

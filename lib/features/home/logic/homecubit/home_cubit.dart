@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:finance_track/core/models/transactions_model.dart';
 import 'package:finance_track/core/models/getmonthlysummary_model.dart';
+import 'package:finance_track/core/utils/network/internet_connection.dart';
 import 'package:finance_track/features/home/data/home_remote_date.dart';
 import 'package:finance_track/features/home/logic/homecubit/home_states.dart';
 
@@ -8,11 +9,16 @@ class HomeCubit extends Cubit<HomeState> {
   HomeCubit() : super(const HomeState());
 
   final HomeRemoteData remoteData = HomeRemoteData();
+  final NetworkInfo networkInfo = NetworkInfo();
 
   Future<void> getHomeData({required DateTime selectedMonth}) async {
     emit(state.copyWith(status: HomeStatus.loading));
 
     try {
+      // Check internet connection before making API call
+      if (!await networkInfo.isConnected()) {
+        throw NoInternetException();
+      }
       final startOfMonth = DateTime(selectedMonth.year, selectedMonth.month, 1);
       final endOfMonth = DateTime(
         selectedMonth.year,

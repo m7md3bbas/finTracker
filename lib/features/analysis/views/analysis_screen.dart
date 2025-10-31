@@ -1,4 +1,5 @@
 import 'package:finance_track/core/extentions/modified_colors.dart';
+// import 'package:finance_track/core/models/category_model.dart';
 import 'package:finance_track/core/utils/colors/app_colors.dart';
 import 'package:finance_track/core/utils/helper/category/category_list.dart';
 import 'package:finance_track/core/utils/popups/toast.dart';
@@ -98,9 +99,21 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    "Select Dates",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  const ListTile(
+                    title: Text(
+                      "Select Date Range",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 16,
+                      ),
+                    ),
+                    subtitle: Text(
+                      "Your available dates.",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w400,
+                        fontSize: 14,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 8),
                   SizedBox(
@@ -112,7 +125,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               const Text(
-                                "Available Dates",
+                                "Start Date",
                                 style: TextStyle(
                                   fontWeight: FontWeight.w500,
                                   fontSize: 14,
@@ -134,9 +147,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                                       onSelectedItemChanged: (index) {
                                         setPickState(() {
                                           startIndex = index;
-                                          if (endIndex < startIndex) {
+                                          if (endIndex < startIndex)
                                             endIndex = startIndex;
-                                          }
                                         });
                                       },
                                       children: availableDates
@@ -185,9 +197,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                                           ),
                                       onSelectedItemChanged: (index) {
                                         setPickState(() {
-                                          if (index >= startIndex) {
+                                          if (index >= startIndex)
                                             endIndex = index;
-                                          }
                                         });
                                       },
                                       children: availableDates
@@ -267,11 +278,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     const Color(0xFFE57373), // red
   ];
 
-  String _formatDate(DateTime? d) {
-    if (d == null) return '';
-    return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -314,12 +320,12 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             return const Center(child: Text("No data available."));
           }
 
-          final analysis = state.analysis!;
-          final totalIncome = analysis.totalIncome ?? 0;
-          final totalExpenses = analysis.totalExpenses ?? 0;
-          final totalSavings = analysis.totalSavings ?? 0;
-          final incomeData = analysis.incomeCategoryBreakdown ?? [];
-          final expenseData = analysis.expenseCategoryBreakdown ?? [];
+          final analysis = state.analysis;
+          final totalIncome = analysis?.totalIncome ?? 0;
+          final totalExpenses = analysis?.totalExpenses ?? 0;
+          final totalSavings = analysis?.totalSavings ?? 0;
+          final incomeData = analysis?.incomeCategoryBreakdown ?? [];
+          final expenseData = analysis?.expenseCategoryBreakdown ?? [];
           bool onlyIncome = _hasOnlyIncome(totalIncome, totalExpenses);
           bool onlyExpenses = _hasOnlyExpenses(totalIncome, totalExpenses);
 
@@ -337,232 +343,245 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               ? totalExpenses
               : totalIncome;
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+          return state.analysis == null
+              ? const Center(child: Text("No data available."))
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 10,
+                        ),
                       ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 10,
-                  ),
-                ),
-                // ------------------------------------------
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    SummaryCard(title: 'Income', amount: totalIncome),
-                    SummaryCard(title: 'Expenses', amount: totalExpenses),
-                    SummaryCard(title: 'Savings', amount: totalSavings),
-                  ],
-                ),
-                const SizedBox(height: 16),
+                      // ------------------------------------------
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          SummaryCard(title: 'Income', amount: totalIncome),
+                          SummaryCard(title: 'Expenses', amount: totalExpenses),
+                          SummaryCard(title: 'Savings', amount: totalSavings),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
 
-                if (!(onlyIncome || onlyExpenses))
-                  Center(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
+                      if (!(onlyIncome || onlyExpenses))
+                        Center(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Colors.white.modify(
+                                  colorCode: AppColors.mainAppColor,
+                                ),
+                              ),
+                            ),
+                            child: ToggleButtons(
+                              borderRadius: BorderRadius.circular(8),
+                              fillColor: Colors.white.modify(
+                                colorCode: AppColors.mainAppColor,
+                              ),
+                              selectedColor: Colors.white,
+                              color: Colors.black87,
+                              textStyle: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                              isSelected: [
+                                selectedType == AnalysisType.income,
+                                selectedType == AnalysisType.expenses,
+                              ],
+                              onPressed: (index) {
+                                setState(() {
+                                  selectedType = index == 0
+                                      ? AnalysisType.income
+                                      : AnalysisType.expenses;
+                                });
+                              },
+                              constraints: BoxConstraints(
+                                minWidth:
+                                    MediaQuery.of(context).size.width * 0.37,
+                                minHeight: 50,
+                              ),
+                              borderWidth: 0,
+                              children: const [
+                                Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                                  child: Text('Income'),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                                  child: Text('Expenses'),
+                                ),
+                              ], // no internal border
+                            ),
+                          ),
+                        ),
+                      if (!(onlyIncome || onlyExpenses))
+                        const SizedBox(height: 20),
+                      if (onlyIncome || onlyExpenses)
+                        const SizedBox(height: 20),
+                      Text(
+                        typeToShow == AnalysisType.expenses
+                            ? 'Expenses'
+                            : 'Income',
+                        style: GoogleFonts.inter(
+                          fontSize: 16.sp,
+                          color: Colors.white.modify(
+                            colorCode: AppColors.mainAppColor,
+                          ),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      // const SizedBox(height: 10),
+                      // MonthlyBars(data: pieData),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 220,
+                        child: PieChart(
+                          PieChartData(
+                            sections: List.generate(pieData.length, (index) {
+                              final item = pieData[index];
+                              final color =
+                                  niceColors[index % niceColors.length];
+                              final amount = item.amount.toDouble();
+                              final percentage = totalAmount > 0
+                                  ? (amount / totalAmount) * 100
+                                  : 0.0;
+
+                              return PieChartSectionData(
+                                color: color,
+                                value: percentage,
+                                title: '${percentage.toStringAsFixed(1)}%',
+                                titleStyle: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                                radius: 60,
+                              );
+                            }),
+                            sectionsSpace: 2,
+                            centerSpaceRadius: 40,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Category',
+                        style: GoogleFonts.inter(
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w600,
                           color: Colors.white.modify(
                             colorCode: AppColors.mainAppColor,
                           ),
                         ),
                       ),
-                      child: ToggleButtons(
-                        borderRadius: BorderRadius.circular(8),
-                        fillColor: Colors.white.modify(
-                          colorCode: AppColors.mainAppColor,
-                        ),
-                        selectedColor: Colors.white,
-                        color: Colors.black87,
-                        textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                        isSelected: [
-                          selectedType == AnalysisType.income,
-                          selectedType == AnalysisType.expenses,
-                        ],
-                        onPressed: (index) {
-                          setState(() {
-                            selectedType = index == 0
-                                ? AnalysisType.income
-                                : AnalysisType.expenses;
-                          });
-                        },
-                        constraints: BoxConstraints(
-                          minWidth: MediaQuery.of(context).size.width * 0.37,
-                          minHeight: 50,
-                        ),
-                        borderWidth: 0,
-                        children: const [
-                          Padding(
-                            padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('Income'),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text('Expenses'),
-                          ),
-                        ], // no internal border
-                      ),
-                    ),
-                  ),
-                if (!(onlyIncome || onlyExpenses)) const SizedBox(height: 20),
-                if (onlyIncome || onlyExpenses) const SizedBox(height: 20),
-                Text(
-                  typeToShow == AnalysisType.expenses ? 'Expenses' : 'Income',
-                  style: GoogleFonts.inter(
-                    fontSize: 16.sp,
-                    color: Colors.white.modify(
-                      colorCode: AppColors.mainAppColor,
-                    ),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                // Bars by category (placed above PieChartData)
-                // MonthlyBars(data: pieData),
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 220,
-                  child: PieChart(
-                    PieChartData(
-                      sections: List.generate(pieData.length, (index) {
-                        final item = pieData[index];
-                        final color = niceColors[index % niceColors.length];
-                        final amount = item.amount.toDouble();
-                        final percentage = totalAmount > 0
-                            ? (amount / totalAmount) * 100
-                            : 0.0;
+                      const SizedBox(height: 8),
+                      Column(
+                        children: List.generate(pieData.length, (index) {
+                          final item = pieData[index];
+                          final color = niceColors[index % niceColors.length];
+                          final percentage = totalAmount > 0
+                              ? (item.amount.toDouble() / totalAmount) * 100
+                              : 0.0;
 
-                        return PieChartSectionData(
-                          color: color,
-                          value: percentage,
-                          title: '${percentage.toStringAsFixed(1)}%',
-                          titleStyle: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                          radius: 60,
-                        );
-                      }),
-                      sectionsSpace: 2,
-                      centerSpaceRadius: 40,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Category',
-                  style: GoogleFonts.inter(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white.modify(
-                      colorCode: AppColors.mainAppColor,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Column(
-                  children: List.generate(pieData.length, (index) {
-                    final item = pieData[index];
-                    final color = niceColors[index % niceColors.length];
-                    final percentage = totalAmount > 0
-                        ? (item.amount.toDouble() / totalAmount) * 100
-                        : 0.0;
-
-                    String? categoryType = typeToShow == AnalysisType.expenses
-                        ? "Expense"
-                        : "Income";
-                    String? icon = getCategoryIcon(
-                      item.category,
-                      type: categoryType,
-                    );
-
-                    Widget avatarChild = icon != null && icon.isNotEmpty
-                        ? Text(icon, style: const TextStyle(fontSize: 18))
-                        : Text(
-                            item.category.isNotEmpty ? item.category[0] : "?",
-                            style: const TextStyle(fontSize: 18),
+                          String? categoryType =
+                              typeToShow == AnalysisType.expenses
+                              ? "Expense"
+                              : "Income";
+                          String? icon = getCategoryIcon(
+                            item.category,
+                            type: categoryType,
                           );
-                    return Card(
-                      elevation: 2,
-                      margin: const EdgeInsets.symmetric(
-                        vertical: 8,
-                        horizontal: 4,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 26,
-                              backgroundColor: color.withOpacity(0.18),
-                              child: CircleAvatar(
-                                backgroundColor: color,
-                                child: avatarChild,
-                              ),
+
+                          Widget avatarChild = icon != null && icon.isNotEmpty
+                              ? Text(icon, style: const TextStyle(fontSize: 18))
+                              : Text(
+                                  item.category.isNotEmpty
+                                      ? item.category[0]
+                                      : "?",
+                                  style: const TextStyle(fontSize: 18),
+                                );
+                          return Card(
+                            elevation: 2,
+                            margin: const EdgeInsets.symmetric(
+                              vertical: 8,
+                              horizontal: 4,
                             ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 14,
+                              ),
+                              child: Row(
                                 children: [
-                                  Text(
-                                    item.category,
-                                    style: GoogleFonts.inter(
-                                      color: Colors.black87,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
+                                  CircleAvatar(
+                                    radius: 26,
+                                    backgroundColor: color.withOpacity(0.18),
+                                    child: CircleAvatar(
+                                      backgroundColor: color,
+                                      child: avatarChild,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '${item.category} (${item.transactions})',
+                                          style: GoogleFonts.inter(
+                                            color: Colors.black87,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          "${percentage.toStringAsFixed(1)}% of ${typeToShow == AnalysisType.expenses ? 'expenses' : 'income'}",
+                                          style: GoogleFonts.inter(
+                                            color: Colors.grey[600],
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                   Text(
-                                    "${percentage.toStringAsFixed(1)}% of ${typeToShow == AnalysisType.expenses ? 'expenses' : 'income'}",
+                                    "\$${item.amount.toStringAsFixed(2)}",
                                     style: GoogleFonts.inter(
-                                      color: Colors.grey[600],
-                                      fontSize: 13,
+                                      color: color,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 16,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            Text(
-                              "\$${item.amount.toStringAsFixed(2)}",
-                              style: GoogleFonts.inter(
-                                color: color,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
+                          );
+                        }),
                       ),
-                    );
-                  }),
-                ),
-              ],
-            ),
-          );
+                    ],
+                  ),
+                );
         },
       ),
     );

@@ -69,7 +69,7 @@ class HomeRemoteData implements HomeServices {
           params: {
             'uid': supabaseClient.auth.currentUser?.id,
             'start_date': startDate.toIso8601String(),
-            'end_date': endDate.toIso8601String(),
+            'end_date': endDate.add(Duration(days: 1)).toIso8601String(),
           },
         )
         .select();
