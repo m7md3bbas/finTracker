@@ -1,5 +1,36 @@
 import 'package:finance_track/core/models/category_model.dart';
 
+String? getCategoryIcon(String categoryName, {String? type}) {
+  // (kept unchanged)
+  print('getCategoryIcon: $categoryName, $type');
+  final normalizedName = categoryName.trim().toLowerCase();
+  final normalizedType = type?.trim().toLowerCase();
+
+  // Defaults for aggregate buckets
+  if (normalizedName == 'income' || normalizedName == 'total income') {
+    return '💰';
+  }
+  if (normalizedName == 'expenses' ||
+      normalizedName == 'expense' ||
+      normalizedName == 'total expenses') {
+    return '💸';
+  }
+
+  // Try strict match on name + optional type
+  final match = categories.firstWhere(
+    (cat) =>
+        cat.name.toLowerCase() == normalizedName &&
+        (normalizedType == null || (cat.type?.toLowerCase() == normalizedType)),
+    orElse: () => categories.firstWhere(
+      (cat) => cat.name.toLowerCase() == normalizedName,
+      orElse: () => const CategoryModel(name: '', icon: '', type: ''),
+    ),
+  );
+  if (match.name.isEmpty) return null; // Not found
+  return match.icon;
+}
+
+/// Predefined categories with icons
 final List<CategoryModel> categories = [
   // 💰 Income
   CategoryModel(name: 'Salary', icon: '💼', type: "Income"),
@@ -9,6 +40,7 @@ final List<CategoryModel> categories = [
   CategoryModel(name: 'Rental Income', icon: '🏠', type: "Income"),
   CategoryModel(name: 'Refunds', icon: '💳', type: "Income"),
   CategoryModel(name: 'Other', icon: '🔖', type: "Income"),
+
   // 💸 Expense
   CategoryModel(name: 'Food', icon: '🍔', type: "Expense"),
   CategoryModel(name: 'Transport', icon: '🚗', type: "Expense"),

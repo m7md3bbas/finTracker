@@ -5,7 +5,6 @@ import 'package:finance_track/core/utils/caching/shared_pref.dart';
 import 'package:finance_track/core/utils/colors/app_colors.dart';
 import 'package:finance_track/core/utils/helper/ui/customcurvecliper.dart';
 import 'package:finance_track/core/utils/popups/toast.dart';
-import 'package:finance_track/features/auth/logic/login/login_cubit.dart';
 import 'package:finance_track/features/auth/logic/user/user_cubit.dart';
 import 'package:finance_track/features/settings/logic/image/image_cubit.dart';
 import 'package:finance_track/features/settings/logic/image/image_state.dart';

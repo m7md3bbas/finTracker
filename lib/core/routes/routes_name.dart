@@ -10,6 +10,6 @@ class RoutesName {
   static const addTransactionScreen = 'add-transaction-screen';
   static const editTransactionScreen = 'edit-transaction-screen';
   static const transactionDetailsScreen = 'transaction-details-screen';
-  static const analyticsScreen = 'analytics-Screen';
+  static const analysisScreen = 'analysis-screen';
   static const notificationScreen = 'notification-screen';
 }

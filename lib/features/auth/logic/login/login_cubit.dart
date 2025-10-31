@@ -1,7 +1,6 @@
 import 'package:finance_track/features/auth/data/login/sign_in_remote_data.dart';
 import 'package:finance_track/features/auth/logic/login/login_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginCubit extends Cubit<LoginState> {
   LoginCubit() : super(LoginState(status: LoginStatus.initial));

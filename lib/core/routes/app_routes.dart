@@ -4,10 +4,10 @@ import 'package:finance_track/core/models/transactions_model.dart';
 import 'package:finance_track/core/routes/routes_name.dart';
 import 'package:finance_track/core/routes/routes_path.dart';
 import 'package:finance_track/core/utils/caching/shared_pref.dart';
+import 'package:finance_track/features/analysis/views/analysis_screen.dart';
 import 'package:finance_track/features/auth/logic/user/user_cubit.dart';
 import 'package:finance_track/features/auth/views/sign_in_screen.dart';
 import 'package:finance_track/features/auth/views/sign_up_screen.dart';
-import 'package:finance_track/features/home/views/analysis_screen.dart';
 import 'package:finance_track/features/home/views/home_screen.dart';
 import 'package:finance_track/features/home/views/widgets/add_transaction_screen.dart';
 import 'package:finance_track/features/home/views/widgets/edit_transaction_screen.dart';
@@ -72,8 +72,8 @@ class AppRoutes {
       ),
 
       GoRoute(
-        path: RoutesName.analyticsScreen,
-        name: RoutesName.analyticsScreen,
+        path: RoutesPath.analysisScreen,
+        name: RoutesName.analysisScreen,
         builder: (context, state) => const Analysis(),
       ),
       GoRoute(
