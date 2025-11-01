@@ -12,8 +12,8 @@ FutureOr<String?> getRedirect(BuildContext context, GoRouterState state) async {
   }
 
   if (isAuthenticated != null) {
-    final startedMonth = await SharedPref().getStarterMonth();
-    if (startedMonth == null && !newUsersQuestions) {
+    final lang = context.read<UserCubit>().user?.userMetadata?['lang'];
+    if (lang == null && !newUsersQuestions) {
       return RoutesPath.newUserQuestionsScreen;
     }
     if (login || signUp) {
