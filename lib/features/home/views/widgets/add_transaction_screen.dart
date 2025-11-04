@@ -219,6 +219,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           Navigator.pop(context);
         }
         if (state.status.isError) {
+          print(state.message);
           ToastNotifier.showError(state.message.toString());
         }
       },

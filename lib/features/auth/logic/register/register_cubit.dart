@@ -7,7 +7,7 @@ class RegisterCubit extends Cubit<RegisterState> {
   RegisterCubit() : super(RegisterState(status: RegisterStatus.initial));
   final SignUpRemoteData remoteData = SignUpRemoteData();
   final NetworkInfo networkInfo = NetworkInfo();
-  
+
   void register({
     required String email,
     required String password,
@@ -24,7 +24,11 @@ class RegisterCubit extends Cubit<RegisterState> {
       });
       emit(state.copyWith(status: RegisterStatus.success));
     } catch (e) {
-      emit(state.copyWith(status: RegisterStatus.error, message: e.toString()));
+      if (!isClosed) {
+        emit(
+          state.copyWith(status: RegisterStatus.error, message: e.toString()),
+        );
+      }
     }
   }
 }

@@ -37,7 +37,6 @@ class TransactionCubit extends Cubit<TransactionState> {
   Future<void> updateTransaction(TransactionModel transaction) async {
     emit(state.copyWith(status: TransactionStatus.loading));
     try {
-      // Check internet connection before making API call
       if (!await networkInfo.isConnected()) {
         throw NoInternetException();
       }
@@ -60,7 +59,6 @@ class TransactionCubit extends Cubit<TransactionState> {
   Future<void> deleteTransaction(String transactionId) async {
     emit(state.copyWith(status: TransactionStatus.loading));
     try {
-      // Check internet connection before making API call
       if (!await networkInfo.isConnected()) {
         throw NoInternetException();
       }

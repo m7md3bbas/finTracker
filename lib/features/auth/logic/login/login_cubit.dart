@@ -11,7 +11,6 @@ class LoginCubit extends Cubit<LoginState> {
   void signIn({required String email, required String password}) async {
     emit(state.copyWith(status: LoginStatus.loading));
     try {
-      // Check internet connection before making API call
       if (!await networkInfo.isConnected()) {
         throw NoInternetException();
       }
@@ -20,7 +19,31 @@ class LoginCubit extends Cubit<LoginState> {
       });
       emit(state.copyWith(status: LoginStatus.success));
     } catch (e) {
-      emit(state.copyWith(status: LoginStatus.error, message: e.toString()));
+      if (!isClosed) {
+        emit(state.copyWith(status: LoginStatus.error, message: e.toString()));
+      }
+    }
+  }
+
+  void signInWithGoogle() async {
+    emit(state.copyWith(status: LoginStatus.googleLoading));
+    try {
+      if (!await networkInfo.isConnected()) {
+        throw NoInternetException();
+      }
+      await Future.delayed(const Duration(seconds: 2), () async {
+        await remoteData.loginWithGoogle();
+      });
+      emit(state.copyWith(status: LoginStatus.googleSuccess));
+    } catch (e) {
+      if (!isClosed) {
+        emit(
+          state.copyWith(
+            status: LoginStatus.googleError,
+            message: e.toString(),
+          ),
+        );
+      }
     }
   }
 }

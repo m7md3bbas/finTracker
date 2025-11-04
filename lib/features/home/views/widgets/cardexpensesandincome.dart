@@ -302,16 +302,19 @@ class _BalanceCardState extends State<BalanceCard> {
                   ),
                   Row(
                     children: [
-                      Icon(
-                        FontAwesomeIcons.coins,
-                        color: widget.remainingBudget > 0
-                            ? Colors.greenAccent
-                            : Colors.redAccent,
-                        size: 14,
+                      Text(
+                        'Used',
+                        style: GoogleFonts.inter(
+                          color: widget.remainingBudget > 0
+                              ? Colors.greenAccent
+                              : Colors.redAccent,
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       SizedBox(width: 6.w),
                       Text(
-                        'Left: \$${widget.remainingBudget.toStringAsFixed(2)}   (${(budgetUsed * 100).clamp(0, 999).toStringAsFixed(0)}%)',
+                        '(${(budgetUsed * 100).clamp(0, 999).toStringAsFixed(0)}%)',
                         style: GoogleFonts.inter(
                           color: widget.remainingBudget > 0
                               ? Colors.greenAccent

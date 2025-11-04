@@ -225,7 +225,6 @@ class _NewUsersQuestionsScreenState extends State<NewUsersQuestionsScreen> {
                 style: TextStyle(fontSize: 16.sp, color: Colors.grey[600]),
               ),
               SizedBox(height: 40.h),
-
               Text(
                 "🌍speaking language",
                 style: TextStyle(
@@ -247,25 +246,24 @@ class _NewUsersQuestionsScreenState extends State<NewUsersQuestionsScreen> {
 
               SizedBox(height: 25.h),
 
-              Text(
-                "📅 When do you want to start tracking?",
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white.modify(colorCode: AppColors.mainAppColor),
-                ),
-              ),
-              SizedBox(height: 8.h),
-              InkWell(
-                onTap: _pickDate,
-                child: _buildInputBox(
-                  text: _selectedDate == null
-                      ? "Select month & year"
-                      : DateFormat('MMMM yyyy').format(_selectedDate!),
-                  icon: Icons.calendar_today_outlined,
-                ),
-              ),
-
+              // Text(
+              //   "📅 When do you want to start tracking?",
+              //   style: TextStyle(
+              //     fontSize: 16.sp,
+              //     fontWeight: FontWeight.w600,
+              //     color: Colors.white.modify(colorCode: AppColors.mainAppColor),
+              //   ),
+              // ),
+              // SizedBox(height: 8.h),
+              // InkWell(
+              //   onTap: _pickDate,
+              //   child: _buildInputBox(
+              //     text: _selectedDate == null
+              //         ? "Select month & year"
+              //         : DateFormat('MMMM yyyy').format(_selectedDate!),
+              //     icon: Icons.calendar_today_outlined,
+              //   ),
+              // ),
               const Spacer(),
 
               BlocConsumer<OnboardingCubit, OnboardingState>(
@@ -278,9 +276,9 @@ class _NewUsersQuestionsScreenState extends State<NewUsersQuestionsScreen> {
                       SharedPref().saveSpeakLang(
                         _selectedCountryLang?['code']!,
                       ),
-                      SharedPref().saveStarterMonth(
-                        DateFormat('yyyy-MM').format(_selectedDate!),
-                      ),
+                      // SharedPref().saveStarterMonth(
+                      //   DateFormat('yyyy-MM').format(_selectedDate!),
+                      // ),
                     ]);
                     context.goNamed(RoutesName.homeScreen);
                   }
@@ -306,10 +304,9 @@ class _NewUsersQuestionsScreenState extends State<NewUsersQuestionsScreen> {
                           colorCode: AppColors.mainAppColor,
                         ),
                         onPressed: () async {
-                          if (_selectedCountryLang == null ||
-                              _selectedDate == null) {
+                          if (_selectedCountryLang == null) {
                             ToastNotifier.showError(
-                              'Please select all fields.',
+                              'Choose your speaking language',
                             );
                             return;
                           }
@@ -317,9 +314,9 @@ class _NewUsersQuestionsScreenState extends State<NewUsersQuestionsScreen> {
                               .read<OnboardingCubit>()
                               .saveSpeakingLangAndStarterMonthly(
                                 lang: _selectedCountryLang?['code']!,
-                                month: DateFormat(
-                                  'yyyy-MM',
-                                ).format(_selectedDate!),
+                                // month: DateFormat(
+                                //   'yyyy-MM',
+                                // ).format(_selectedDate!),
                               );
                         },
                       ),

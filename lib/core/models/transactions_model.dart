@@ -5,11 +5,11 @@ class TransactionModel extends Equatable {
   final String userId;
   final String title;
   final double amount;
-  final String type; // 'income' or 'expense'
+  final String type;
   final DateTime date;
   final String? note;
-  final String? categoryName; // for joined query
-  final String? categoryType; // for joined query
+  final String? categoryName;
+
   final DateTime? createdAt;
 
   const TransactionModel({
@@ -21,7 +21,6 @@ class TransactionModel extends Equatable {
     required this.date,
     this.note,
     this.categoryName,
-    this.categoryType,
     this.createdAt,
   });
 
@@ -46,7 +45,6 @@ class TransactionModel extends Equatable {
       date: date ?? this.date,
       note: note ?? this.note,
       categoryName: categoryName ?? this.categoryName,
-      categoryType: categoryType ?? this.categoryType,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -54,7 +52,7 @@ class TransactionModel extends Equatable {
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
     return TransactionModel(
       id: json['id']?.toString(),
-      userId: json['user_id']?.toString() ?? '', // required field
+      userId: json['user_id']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
       amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
       type: json['type']?.toString() ?? 'income',
@@ -80,9 +78,6 @@ class TransactionModel extends Equatable {
       'created_at': createdAt?.toIso8601String(),
     };
 
-    // Only include user_id if it's valid
-    if (userId.isNotEmpty) data['user_id'] = userId;
-
     return data;
   }
 
@@ -96,7 +91,6 @@ class TransactionModel extends Equatable {
     date,
     note,
     categoryName,
-    categoryType,
     createdAt,
   ];
 }

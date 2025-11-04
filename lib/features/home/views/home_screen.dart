@@ -3,13 +3,18 @@ import 'package:finance_track/core/models/category_model.dart';
 import 'package:finance_track/core/models/transactions_model.dart';
 import 'package:finance_track/core/routes/routes_name.dart';
 import 'package:finance_track/core/utils/colors/app_colors.dart';
-import 'package:finance_track/core/utils/helper/analysis_text/analysis.dart';
+import 'package:finance_track/core/utils/helper/gemini_service/gemini_service.dart';
 import 'package:finance_track/core/utils/helper/ui/customcurvecliper.dart';
 import 'package:finance_track/core/utils/popups/toast.dart';
 import 'package:finance_track/features/auth/logic/user/user_cubit.dart';
 import 'package:finance_track/features/home/logic/homecubit/home_cubit.dart';
 import 'package:finance_track/features/home/logic/homecubit/home_states.dart';
+import 'package:finance_track/features/home/logic/scan/scan_cubit.dart';
+import 'package:finance_track/features/home/logic/scan/scan_state.dart';
 import 'package:finance_track/features/home/logic/transactions/transaction_cubit.dart';
+import 'package:finance_track/features/home/logic/transactions/transaction_state.dart';
+import 'package:finance_track/features/home/logic/voice/voice_cubit.dart';
+import 'package:finance_track/features/home/logic/voice/voice_state.dart';
 import 'package:finance_track/features/home/views/widgets/cardexpensesandincome.dart';
 import 'package:finance_track/features/home/views/widgets/shimmer_card.dart';
 import 'package:finance_track/features/home/views/widgets/transaction_shimmer_item.dart';
@@ -33,14 +38,17 @@ class Home extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) =>
-          HomeCubit()..getHomeData(selectedMonth: DateTime.now()),
-
-      child: BlocProvider(
-        create: (context) => TransactionCubit(),
-        child: const HomeScreen(),
-      ),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<HomeCubit>(
+          create: (context) =>
+              HomeCubit()..getHomeData(selectedMonth: DateTime.now()),
+        ),
+        BlocProvider<TransactionCubit>(create: (context) => TransactionCubit()),
+        BlocProvider<ScanCubit>(create: (context) => ScanCubit()),
+        BlocProvider<VoiceCubit>(create: (context) => VoiceCubit()),
+      ],
+      child: const HomeScreen(),
     );
   }
 }
@@ -57,10 +65,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isArrowDown = true;
   CategoryModel? selectedCategory;
   List<TransactionModel> filteredTransactions = [];
-
   bool isVoice = false;
   DateTime selectedDate = DateTime.now();
-
   final SpeechToText _speechToText = SpeechToText();
   bool _speechEnabled = false;
   double _soundLevel = 0.0;
@@ -76,10 +82,38 @@ class _HomeScreenState extends State<HomeScreen> {
     _initSpeech();
   }
 
+  void _scanReceipt() async {
+    context.read<ScanCubit>().scanReceipt(fromGallery: false);
+  }
+
+  void _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime(DateTime.now().year, 1, 1),
+      lastDate: DateTime(2100, 12, 31),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: ColorScheme.light(
+            primary: Colors.white.modify(colorCode: AppColors.mainAppColor),
+            onPrimary: Colors.white,
+            onSurface: Colors.white.modify(colorCode: AppColors.mainAppColor),
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) {
+      setState(() {
+        selectedDate = picked;
+        context.read<HomeCubit>().getHomeData(selectedMonth: picked);
+      });
+    }
+  }
+
   void _initSpeech() async {
     _speechEnabled = await _speechToText.initialize(
       onStatus: (status) async {
-        debugPrint('Speech status: $status');
         if (status == 'done' || status == 'notListening') {
           if (mounted) {
             setState(() => isVoice = false);
@@ -88,7 +122,6 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       },
       onError: (error) {
-        debugPrint('Speech error: $error');
         if (mounted) setState(() => isVoice = false);
       },
     );
@@ -102,19 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (!_hasNavigatedToEdit && _lastWords.isNotEmpty) {
       _hasNavigatedToEdit = true;
-      final transactionModel = parseTransactionFromText(
-        _lastWords,
-        context.read<UserCubit>().user?.id ?? '',
-      );
-
-      if ((transactionModel?.title.isNotEmpty ?? false) && mounted) {
-        await context.read<TransactionCubit>().addTransaction(
-          transactionModel!,
-        );
-        await context.read<HomeCubit>().getHomeData(
-          selectedMonth: DateTime.now(),
-        );
-      }
+      await context.read<VoiceCubit>().getVoiceResult(_lastWords);
     }
 
     setState(() => isVoice = false);
@@ -132,8 +153,8 @@ class _HomeScreenState extends State<HomeScreen> {
       onSoundLevelChange: (level) {
         setState(() => _soundLevel = level);
       },
-      listenFor: const Duration(seconds: 60),
-      pauseFor: const Duration(seconds: 3),
+      listenFor: const Duration(seconds: 300),
+      pauseFor: const Duration(seconds: 10),
       listenOptions: SpeechListenOptions(
         cancelOnError: true,
         listenMode: ListenMode.dictation,
@@ -153,264 +174,316 @@ class _HomeScreenState extends State<HomeScreen> {
     final userName =
         context.read<UserCubit>().user?.userMetadata?['name'] ?? '';
 
-    return BlocConsumer<HomeCubit, HomeState>(
-      listener: (context, state) {
-        if (state.status.isError) {
-          ToastNotifier.showError(state.message.toString());
-        }
-      },
-      builder: (context, state) {
-        final cubit = context.read<HomeCubit>();
-        final List<TransactionModel> transactionsToShow =
-            filteredTransactions.isNotEmpty
-            ? filteredTransactions
-            : selectedCategory == null
-            ? state.transactions
-            : [];
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<VoiceCubit, VoiceState>(
+          listener: (context, state) {
+            if (state.status.isSuccess) {
+              context.read<TransactionCubit>().addTransaction(state.text!);
+            } else if (state.status.isError) {
+              ToastNotifier.showError(state.message ?? "Voice failed");
+            }
+          },
+        ),
+        BlocListener<HomeCubit, HomeState>(
+          listener: (context, state) {
+            if (state.status.isError) {
+              ToastNotifier.showError(state.message.toString());
+            }
+          },
+        ),
+        BlocListener<TransactionCubit, TransactionState>(
+          listener: (context, state) {
+            if (state.status.isSuccess) {
+              ToastNotifier.showSuccess(state.message ?? "Transaction added");
+              context.read<HomeCubit>().getHomeData(
+                selectedMonth: DateTime.now(),
+              );
+            } else if (state.status.isError) {
+              ToastNotifier.showError(state.message ?? "Transaction failed");
+            }
+          },
+        ),
+        BlocListener<ScanCubit, ScanState>(
+          listener: (context, state) {
+            if (state.status.isSuccess) {
+              context.read<TransactionCubit>().addTransaction(state.text!);
+            }
+            if (state.status.isError) {
+              ToastNotifier.showError(state.message ?? "Scan failed");
+            }
+          },
+        ),
+      ],
+      child: BlocBuilder<HomeCubit, HomeState>(
+        builder: (context, state) {
+          final cubit = context.read<HomeCubit>();
+          final List<TransactionModel> transactionsToShow =
+              filteredTransactions.isNotEmpty
+              ? filteredTransactions
+              : selectedCategory == null
+              ? state.transactions
+              : [];
 
-        return Scaffold(
-          backgroundColor: Colors.grey[100],
+          return Scaffold(
+            backgroundColor: Colors.grey[100],
 
-          body: Stack(
-            children: [
-              RefreshIndicator(
-                backgroundColor: Colors.white.modify(
-                  colorCode: AppColors.mainAppColor,
-                ),
-                color: Colors.white,
-                onRefresh: () async {
-                  return await cubit.getHomeData(selectedMonth: selectedDate);
-                },
-                child: CustomScrollView(
-                  slivers: [
-                    SliverAppBar(
-                      actionsPadding: EdgeInsets.zero,
+            body: Stack(
+              children: [
+                RefreshIndicator(
+                  backgroundColor: Colors.white.modify(
+                    colorCode: AppColors.mainAppColor,
+                  ),
+                  color: Colors.white,
+                  onRefresh: () async {
+                    return await cubit.getHomeData(selectedMonth: selectedDate);
+                  },
+                  child: CustomScrollView(
+                    slivers: [
+                      SliverAppBar(
+                        actionsPadding: EdgeInsets.zero,
 
-                      backgroundColor: Colors.white.modify(
-                        colorCode: AppColors.mainAppColor,
-                      ),
-
-                      actions: [
-                        IconButton(
-                          icon: Icon(
-                            FontAwesomeIcons.chartLine,
-                            color: Colors.white,
-                          ),
-                          onPressed: () =>
-                              context.pushNamed(RoutesName.analysisScreen),
+                        backgroundColor: Colors.white.modify(
+                          colorCode: AppColors.mainAppColor,
                         ),
-                        IconButton(
-                          icon: Icon(
-                            FontAwesomeIcons.gear,
-                            color: Colors.white,
-                          ),
-                          onPressed: () =>
-                              context.pushNamed(RoutesName.settingsScreen),
-                        ),
-                      ],
-                    ),
 
-                    SliverToBoxAdapter(
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          ClipPath(
-                            clipper: BottomCurveClipper(),
-                            child: HomeHeader(userName: userName),
+                        actions: [
+                          IconButton(
+                            icon: Icon(
+                              FontAwesomeIcons.chartLine,
+                              color: Colors.white,
+                            ),
+                            onPressed: () =>
+                                context.pushNamed(RoutesName.analysisScreen),
                           ),
-                          Positioned(
-                            bottom: -110.h,
-                            left: 20.w,
-                            right: 20.w,
-                            child: state.status.isLoading
-                                ? const BalanceCardShimmer()
-                                : BalanceCard(
-                                    totalBalance: state.summary.totalBalance,
-                                    income: state.summary.totalIncome,
-                                    expenses: state.summary.totalExpense,
-                                    remainingBudget:
-                                        state.summary.remainingBudget ?? 0,
-                                    monthlyBudget:
-                                        state.summary.monthlyBudget ?? 0,
-                                    selectedDate: selectedDate,
-                                  ),
+                          IconButton(
+                            icon: Icon(
+                              FontAwesomeIcons.gear,
+                              color: Colors.white,
+                            ),
+                            onPressed: () =>
+                                context.pushNamed(RoutesName.settingsScreen),
                           ),
                         ],
                       ),
-                    ),
 
-                    SliverToBoxAdapter(child: SizedBox(height: 110.h)),
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      SliverToBoxAdapter(
+                        child: Stack(
+                          clipBehavior: Clip.none,
                           children: [
-                            ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              leading: Icon(
-                                Icons.calendar_month,
-                                color: Colors.white.modify(
-                                  colorCode: AppColors.mainAppColor,
-                                ),
-                              ),
-                              title: Text(
-                                "Select Month",
-                                style: GoogleFonts.inter(
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                              trailing: Container(
-                                padding: EdgeInsets.all(1.w),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.modify(
-                                    colorCode: AppColors.mainCardColor,
-                                  ),
-                                  borderRadius: BorderRadius.circular(12.r),
-                                ),
-                                child: IconButton(
-                                  icon: Icon(
-                                    isArrowDown
-                                        ? Icons.keyboard_arrow_down
-                                        : Icons.keyboard_arrow_right,
-                                    color: Colors.white,
-                                    size: 24.sp,
-                                  ),
-                                  onPressed: () => setState(
-                                    () => isArrowDown = !isArrowDown,
-                                  ),
-                                ),
-                              ),
-                              titleAlignment: ListTileTitleAlignment.center,
+                            ClipPath(
+                              clipper: BottomCurveClipper(),
+                              child: HomeHeader(userName: userName),
                             ),
-                            SizedBox(height: 8.h),
-                            MonthSelector(
-                              controller: _scrollController,
-                              selectedDate: selectedDate,
-                              onSelect: (date) async {
-                                setState(() => selectedDate = date);
-                                await cubit.getHomeData(selectedMonth: date);
-                              },
+                            Positioned(
+                              bottom: -110.h,
+                              left: 20.w,
+                              right: 20.w,
+                              child: state.status.isLoading
+                                  ? const BalanceCardShimmer()
+                                  : BalanceCard(
+                                      totalBalance: state.summary.totalBalance,
+                                      income: state.summary.totalIncome,
+                                      expenses: state.summary.totalExpense,
+                                      remainingBudget:
+                                          state.summary.remainingBudget ?? 0,
+                                      monthlyBudget:
+                                          state.summary.monthlyBudget ?? 0,
+                                      selectedDate: selectedDate,
+                                    ),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                    isArrowDown
-                        ? SliverToBoxAdapter(
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 8.w,
-                                vertical: 8.h,
+
+                      SliverToBoxAdapter(child: SizedBox(height: 110.h)),
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              GestureDetector(
+                                onTap: () => _pickDate(),
+                                child: ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  leading: Icon(
+                                    Icons.calendar_month,
+                                    color: Colors.white.modify(
+                                      colorCode: AppColors.mainAppColor,
+                                    ),
+                                  ),
+                                  title: Text(
+                                    "Select Month",
+                                    style: GoogleFonts.inter(
+                                      fontSize: 16.sp,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  trailing: Container(
+                                    padding: EdgeInsets.all(1.w),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.modify(
+                                        colorCode: AppColors.mainCardColor,
+                                      ),
+                                      borderRadius: BorderRadius.circular(12.r),
+                                    ),
+                                    child: IconButton(
+                                      icon: Icon(
+                                        isArrowDown
+                                            ? Icons.keyboard_arrow_down
+                                            : Icons.keyboard_arrow_right,
+                                        color: Colors.white,
+                                        size: 24.sp,
+                                      ),
+                                      onPressed: () => setState(
+                                        () => isArrowDown = !isArrowDown,
+                                      ),
+                                    ),
+                                  ),
+                                  titleAlignment: ListTileTitleAlignment.center,
+                                ),
                               ),
-                              child: CategoryFilterChips(
-                                transactions: state.transactions,
-                                selectedCategory: selectedCategory,
-                                onSelectionChanged: (category) {
-                                  setState(() {
-                                    selectedCategory = category;
-                                    if (category == null) {
-                                      filteredTransactions = [];
-                                    } else {
-                                      filteredTransactions = state.transactions
-                                          .where(
-                                            (t) =>
-                                                t.categoryName == category.name,
-                                          )
-                                          .toList();
-                                    }
-                                  });
-                                },
+                              SizedBox(height: 8.h),
+                              isArrowDown
+                                  ? MonthSelector(
+                                      controller: _scrollController,
+                                      selectedDate: selectedDate,
+                                      onSelect: (date) async {
+                                        setState(() => selectedDate = date);
+                                        await cubit.getHomeData(
+                                          selectedMonth: date,
+                                        );
+                                      },
+                                    )
+                                  : const SizedBox.shrink(),
+                            ],
+                          ),
+                        ),
+                      ),
+                      isArrowDown
+                          ? SliverToBoxAdapter(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 8.w,
+                                  vertical: 8.h,
+                                ),
+                                child: CategoryFilterChips(
+                                  transactions: state.transactions,
+                                  selectedCategory: selectedCategory,
+                                  onSelectionChanged: (category) {
+                                    setState(() {
+                                      selectedCategory = category;
+                                      if (category == null) {
+                                        filteredTransactions = [];
+                                      } else {
+                                        filteredTransactions = state
+                                            .transactions
+                                            .where(
+                                              (t) =>
+                                                  t.categoryName ==
+                                                  category.name,
+                                            )
+                                            .toList();
+                                      }
+                                    });
+                                  },
+                                ),
+                              ),
+                            )
+                          : const SliverToBoxAdapter(child: SizedBox.shrink()),
+
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w),
+                          child: const RecentTransactionsHeader(),
+                        ),
+                      ),
+
+                      if (state.status.isLoading)
+                        SliverPadding(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w),
+                          sliver: SliverList.builder(
+                            itemCount: 3,
+                            itemBuilder: (context, index) =>
+                                const TransactionItemShimmer(),
+                          ),
+                        )
+                      else if (state.transactions.isEmpty)
+                        const SliverToBoxAdapter(
+                          child: Center(
+                            child: Padding(
+                              padding: EdgeInsets.only(top: 50.0),
+                              child: Text(
+                                "No transactions found for this month",
                               ),
                             ),
-                          )
-                        : const SliverToBoxAdapter(child: SizedBox.shrink()),
-
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w),
-                        child: const RecentTransactionsHeader(),
-                      ),
-                    ),
-
-                    if (state.status.isLoading)
-                      SliverPadding(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w),
-                        sliver: SliverList.builder(
-                          itemCount: 3,
-                          itemBuilder: (context, index) =>
-                              const TransactionItemShimmer(),
-                        ),
-                      )
-                    else if (state.transactions.isEmpty)
-                      const SliverToBoxAdapter(
-                        child: Center(
-                          child: Padding(
-                            padding: EdgeInsets.only(top: 50.0),
-                            child: Text("No transactions found for this month"),
                           ),
-                        ),
-                      )
-                    else
-                      TransactionsList(transactions: transactionsToShow),
-                  ],
+                        )
+                      else
+                        TransactionsList(transactions: transactionsToShow),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          floatingActionButtonLocation:
-              FloatingActionButtonLocation.centerFloat,
-          floatingActionButton: isVoice
-              ? GestureDetector(
-                  onTap: _stopListening,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 100),
-                    width: 60.w + _soundLevel / 2,
-                    height: 60.w + _soundLevel / 2,
-                    decoration: BoxDecoration(
-                      color: Colors.white.modify(
-                        colorCode: AppColors.mainAppColor,
-                      ),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.white.modify(
-                            colorCode: AppColors.mainAppColor,
+              ],
+            ),
+            floatingActionButtonLocation:
+                FloatingActionButtonLocation.centerFloat,
+
+            floatingActionButton: isVoice
+                ? GestureDetector(
+                    onTap: _stopListening,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 100),
+                      width: 60.w + _soundLevel / 2,
+                      height: 60.w + _soundLevel / 2,
+                      decoration: BoxDecoration(
+                        color: Colors.white.modify(
+                          colorCode: AppColors.mainAppColor,
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.white.modify(
+                              colorCode: AppColors.mainAppColor,
+                            ),
+                            blurRadius: 24.r,
+                            spreadRadius: 4.r,
                           ),
-                          blurRadius: 24.r,
-                          spreadRadius: 4.r,
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      FontAwesomeIcons.microphone,
-                      color: Colors.white,
-                      size: 20.w + _soundLevel,
-                    ),
-                  ),
-                )
-              : FloatingActionButton(
-                  shape: const CircleBorder(),
-                  backgroundColor: Colors.white.modify(
-                    colorCode: AppColors.mainAppColor,
-                  ),
-                  child: Icon(FontAwesomeIcons.plus, color: Colors.white),
-                  onPressed: () {
-                    showModalBottomSheet(
-                      barrierLabel: 'Transaction Type',
-                      isDismissible: true,
-                      backgroundColor: Colors.transparent,
-                      context: context,
-                      builder: (context) => TransactionActionSheet(
-                        onVoice: () => _startListening(),
+                        ],
                       ),
-                    );
-                  },
-                ),
-        );
-      },
+                      child: Icon(
+                        FontAwesomeIcons.microphone,
+                        color: Colors.white,
+                        size: 20.w + _soundLevel,
+                      ),
+                    ),
+                  )
+                : FloatingActionButton(
+                    shape: const CircleBorder(),
+                    backgroundColor: Colors.white.modify(
+                      colorCode: AppColors.mainAppColor,
+                    ),
+                    child: Icon(FontAwesomeIcons.plus, color: Colors.white),
+                    onPressed: () {
+                      showModalBottomSheet(
+                        barrierLabel: 'Transaction Type',
+                        isDismissible: true,
+                        backgroundColor: Colors.transparent,
+                        context: context,
+                        builder: (context) => TransactionActionSheet(
+                          onVoice: () => _startListening(),
+                          onScan: () {
+                            _scanReceipt();
+                          },
+                        ),
+                      );
+                    },
+                  ),
+          );
+        },
+      ),
     );
   }
 }

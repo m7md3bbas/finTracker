@@ -1,10 +1,21 @@
-enum LoginStatus { initial, loading, success, error }
+enum LoginStatus {
+  initial,
+  loading,
+  success,
+  error,
+  googleLoading,
+  googleSuccess,
+  googleError,
+}
 
 extension LoginStatusX on LoginStatus {
   bool get isInitial => this == LoginStatus.initial;
   bool get isLoading => this == LoginStatus.loading;
   bool get isSuccess => this == LoginStatus.success;
   bool get isError => this == LoginStatus.error;
+  bool get isGoogleLoading => this == LoginStatus.googleLoading;
+  bool get isGoogleSuccess => this == LoginStatus.googleSuccess;
+  bool get isGoogleError => this == LoginStatus.googleError;
 }
 
 class LoginState {

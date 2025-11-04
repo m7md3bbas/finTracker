@@ -42,20 +42,23 @@ class HomeRemoteData implements HomeServices {
 
   @override
   Future<void> addTransaction(TransactionModel transaction) async {
-    await supabaseClient.from('transactions').insert(transaction.toJson());
+    await supabaseClient.from('trans').insert(transaction.toJson());
   }
 
   @override
   Future<void> updateTransaction(TransactionModel transaction) async {
     await supabaseClient
-        .from('transactions')
+        .from('transactions_list')
         .update(transaction.toJson())
         .eq('id', transaction.id ?? '');
   }
 
   @override
   Future<void> deleteTransaction(String transactionId) async {
-    await supabaseClient.from('transactions').delete().eq('id', transactionId);
+    await supabaseClient
+        .from('transactions_list')
+        .delete()
+        .eq('id', transactionId);
   }
 
   @override

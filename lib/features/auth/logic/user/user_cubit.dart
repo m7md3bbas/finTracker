@@ -17,7 +17,9 @@ class UserCubit extends Cubit<UserState> {
       await remoteData.signOut();
       emit(state.copyWith(status: UserStatus.success));
     } catch (e) {
-      emit(state.copyWith(status: UserStatus.error, message: e.toString()));
+      if (!isClosed) {
+        emit(state.copyWith(status: UserStatus.error, message: e.toString()));
+      }
     }
   }
 

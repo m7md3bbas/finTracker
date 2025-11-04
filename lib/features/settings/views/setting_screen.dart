@@ -10,6 +10,8 @@ import 'package:finance_track/features/auth/logic/user/user_cubit.dart';
 import 'package:finance_track/features/auth/logic/user/user_state.dart';
 import 'package:finance_track/features/settings/logic/image/image_cubit.dart';
 import 'package:finance_track/features/settings/logic/image/image_state.dart';
+import 'package:finance_track/features/settings/logic/theme/theme_cubit.dart';
+import 'package:finance_track/features/settings/logic/theme/theme_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -97,7 +99,6 @@ class _SettingScreenState extends State<SettingScreen> {
 
         if (state.status.isSuccess && _isLoggingOut) {
           _isLoggingOut = false;
-          // Close the loading dialog if it's open
           if (Navigator.of(context, rootNavigator: true).canPop()) {
             Navigator.of(context, rootNavigator: true).pop();
           }
@@ -105,7 +106,6 @@ class _SettingScreenState extends State<SettingScreen> {
         }
         if (state.status.isError && _isLoggingOut) {
           _isLoggingOut = false;
-          // Close the loading dialog if it's open
           if (Navigator.of(context, rootNavigator: true).canPop()) {
             Navigator.of(context, rootNavigator: true).pop();
           }
@@ -239,10 +239,50 @@ class _SettingScreenState extends State<SettingScreen> {
                   ),
                 ),
               ),
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 16.h,
+                  ),
+                  child: Column(
+                    children: [
+                      _buildThemeToggle(context),
+                      SizedBox(height: 16.h),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildThemeToggle(BuildContext context) {
+    return BlocBuilder<ThemeCubit, ThemeState>(
+      builder: (context, themeState) {
+        return Card(
+          child: ListTile(
+            leading: Icon(
+              themeState.themeMode == ThemeMode.dark
+                  ? Icons.dark_mode
+                  : Icons.light_mode,
+            ),
+            title: Text('Theme Mode'),
+            subtitle: Text(
+              themeState.themeMode == ThemeMode.dark ? 'Dark' : 'Light',
+            ),
+            trailing: Switch(
+              value: themeState.themeMode == ThemeMode.dark,
+              onChanged: (value) {
+                context.read<ThemeCubit>().toggleTheme();
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 }

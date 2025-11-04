@@ -10,11 +10,13 @@ class CustomButton extends StatelessWidget {
     super.key,
     this.color,
     required this.onPressed,
+    this.textColor,
     required this.text,
   });
   final VoidCallback onPressed;
   final String text;
   final Color? color;
+  final Color? textColor;
   @override
   Widget build(BuildContext context) {
     return DismissKeyboard(
@@ -30,7 +32,10 @@ class CustomButton extends StatelessWidget {
         onPressed: onPressed,
         child: Text(
           text,
-          style: GoogleFonts.inter(color: Colors.white, fontSize: 16.sp),
+          style: GoogleFonts.inter(
+            color: textColor ?? Colors.white,
+            fontSize: 16.sp,
+          ),
         ),
       ),
     );

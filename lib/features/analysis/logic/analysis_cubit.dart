@@ -15,7 +15,6 @@ class AnalysisCubit extends Cubit<AnalysisState> {
   }) async {
     emit(state.copyWith(status: AnalysisStatus.loading));
     try {
-      // Check internet connection before making API call
       if (!await networkInfo.isConnected()) {
         throw NoInternetException();
       }
@@ -25,16 +24,17 @@ class AnalysisCubit extends Cubit<AnalysisState> {
       );
       emit(state.copyWith(status: AnalysisStatus.success, analysis: analysis));
     } catch (e) {
-      emit(
-        state.copyWith(status: AnalysisStatus.failure, message: e.toString()),
-      );
+      if (!isClosed) {
+        emit(
+          state.copyWith(status: AnalysisStatus.failure, message: e.toString()),
+        );
+      }
     }
   }
 
   Future<void> getAvailableTransactionDates() async {
     emit(state.copyWith(status: AnalysisStatus.loading));
     try {
-      // Check internet connection before making API call
       if (!await networkInfo.isConnected()) {
         throw NoInternetException();
       }
@@ -46,9 +46,11 @@ class AnalysisCubit extends Cubit<AnalysisState> {
         ),
       );
     } catch (e) {
-      emit(
-        state.copyWith(status: AnalysisStatus.failure, message: e.toString()),
-      );
+      if (!isClosed) {
+        emit(
+          state.copyWith(status: AnalysisStatus.failure, message: e.toString()),
+        );
+      }
     }
   }
 }

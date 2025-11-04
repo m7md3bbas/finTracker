@@ -58,6 +58,9 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     return BlocConsumer<LoginCubit, LoginState>(
       listener: (context, state) {
+        if (state.status.isGoogleError) {
+          ToastNotifier.showError(state.message.toString());
+        }
         if (state.status.isSuccess) {
           context.goNamed(RoutesName.homeScreen);
         } else if (state.status.isError) {
@@ -130,38 +133,38 @@ class _SignInScreenState extends State<SignInScreen> {
                             }
                           },
                         ),
-                        SizedBox(height: 20.h),
-                        Row(
-                          children: [
-                            Checkbox(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(4.r),
-                              ),
-                              value: false,
-                              fillColor: WidgetStateProperty.resolveWith<Color>(
-                                (Set<WidgetState> states) {
-                                  if (states.contains(WidgetState.selected)) {
-                                    return Colors.white.modify(
-                                      colorCode: AppColors.mainAppColor,
-                                    );
-                                  }
-                                  return Colors.transparent;
-                                },
-                              ),
-                              onChanged: (bool? value) {},
-                            ),
-                            Text(
-                              'Remember me',
-                              style: GoogleFonts.inter(
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white.modify(
-                                  colorCode: AppColors.mainAppColor,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                        // SizedBox(height: 20.h),
+                        // Row(
+                        //   children: [
+                        //     Checkbox(
+                        //       shape: RoundedRectangleBorder(
+                        //         borderRadius: BorderRadius.circular(4.r),
+                        //       ),
+                        //       value: false,
+                        //       fillColor: WidgetStateProperty.resolveWith<Color>(
+                        //         (Set<WidgetState> states) {
+                        //           if (states.contains(WidgetState.selected)) {
+                        //             return Colors.white.modify(
+                        //               colorCode: AppColors.mainAppColor,
+                        //             );
+                        //           }
+                        //           return Colors.transparent;
+                        //         },
+                        //       ),
+                        //       onChanged: (bool? value) {},
+                        //     ),
+                        //     Text(
+                        //       'Remember me',
+                        //       style: GoogleFonts.inter(
+                        //         fontSize: 14.sp,
+                        //         fontWeight: FontWeight.w500,
+                        //         color: Colors.white.modify(
+                        //           colorCode: AppColors.mainAppColor,
+                        //         ),
+                        //       ),
+                        //     ),
+                        //   ],
+                        // ),
                         SizedBox(height: 20.h),
                         Align(
                           alignment: Alignment.center,
@@ -176,6 +179,8 @@ class _SignInScreenState extends State<SignInScreen> {
                                   onPressed: onPressed,
                                 ),
                         ),
+                        SizedBox(height: 20.h),
+
                         SizedBox(height: 20.h),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -206,6 +211,26 @@ class _SignInScreenState extends State<SignInScreen> {
                               ),
                             ),
                           ],
+                        ),
+                        SizedBox(height: 20.h),
+                        Align(
+                          alignment: Alignment.center,
+                          child: state.status.isGoogleLoading
+                              ? CircularProgressIndicator(
+                                  color: Colors.white.modify(
+                                    colorCode: AppColors.mainAppColor,
+                                  ),
+                                )
+                              : CustomButton(
+                                  textColor: Colors.white.modify(
+                                    colorCode: AppColors.mainAppColor,
+                                  ),
+                                  color: Colors.grey.shade200,
+                                  onPressed: () => context
+                                      .read<LoginCubit>()
+                                      .signInWithGoogle(),
+                                  text: 'Continue with Google',
+                                ),
                         ),
                       ],
                     ),

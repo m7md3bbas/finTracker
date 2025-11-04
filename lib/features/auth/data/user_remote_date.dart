@@ -6,7 +6,11 @@ class UserRemoteDate {
   get user => supabaseClient.auth.currentUser;
 
   Future<void> addBudget(BudgetModel budget) async {
-    await supabaseClient.from('budgets').insert(budget.toJson());
+    try {
+      await supabaseClient.from('budgets').insert(budget.toJson());
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<BudgetModel?> getBudget(String userId, int month, int year) async {

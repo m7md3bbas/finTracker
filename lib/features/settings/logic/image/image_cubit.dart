@@ -17,7 +17,6 @@ class ImageCubit extends Cubit<ImageState> {
   void uploadImage(File imageFile) async {
     emit(state.copyWith(status: ImageStatus.loading));
     try {
-      // Check internet connection before making API call
       if (!await networkInfo.isConnected()) {
         throw NoInternetException();
       }
@@ -33,7 +32,9 @@ class ImageCubit extends Cubit<ImageState> {
         ),
       );
     } catch (e) {
-      emit(state.copyWith(status: ImageStatus.error, message: e.toString()));
+      if (!isClosed) {
+        emit(state.copyWith(status: ImageStatus.error, message: e.toString()));
+      }
     }
   }
 

@@ -1,6 +1,7 @@
 import 'dart:ui';
-
 import 'package:finance_track/app.dart';
+import 'package:finance_track/core/supabase/notifications/fcm.dart';
+import 'package:finance_track/core/supabase/notifications/local.dart';
 import 'package:finance_track/core/supabase/supabase_init.dart';
 import 'package:finance_track/firebase_options.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -10,23 +11,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle());
   await dotenv.load(fileName: ".env");
-
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await SupabaseInit.init();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  ).then((_) {
-    FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
-    FlutterError.onError = (errorDetails) async {
-      await FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
-    };
-    PlatformDispatcher.instance.onError = (error, stack) {
-      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-      return true;
-    };
-  });
+  final localNotifications = LocalNotifications();
+  localNotifications.init();
+
+  FlutterError.onError = (errorDetails) async {
+    await FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
+  await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
+  await FcmService.instance.initFCM(localNotifications: localNotifications);
+
   runApp(FinTracker());
 }

@@ -102,12 +102,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           children: [
                             Expanded(
                               child: CustomTextFormField(
+                                maxLines: 1,
                                 controller: _fnameController,
                                 hintText: ' First Name',
                               ),
                             ),
                             Expanded(
                               child: CustomTextFormField(
+                                maxLines: 1,
                                 controller: _lnameController,
                                 hintText: ' Last Name',
                               ),

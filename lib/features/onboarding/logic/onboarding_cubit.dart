@@ -11,7 +11,7 @@ class OnboardingCubit extends Cubit<OnboardingState> {
 
   void saveSpeakingLangAndStarterMonthly({
     required String lang,
-    required String month,
+    // required String month,
   }) async {
     emit(state.copyWith(status: OnboardingStatus.loading));
     try {
@@ -21,7 +21,7 @@ class OnboardingCubit extends Cubit<OnboardingState> {
       }
       await remoteData.saveSpeakingLangAndStarterMonthly(
         lang: lang,
-        month: month,
+        // month: month,
       );
       emit(
         state.copyWith(
