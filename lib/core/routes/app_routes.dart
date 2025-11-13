@@ -1,12 +1,30 @@
+import 'dart:async';
+
+import 'package:finance_track/core/models/transactions_model.dart';
 import 'package:finance_track/core/routes/routes_name.dart';
 import 'package:finance_track/core/routes/routes_path.dart';
-import 'package:finance_track/features/home/views/sign_in_screen.dart';
-import 'package:finance_track/features/home/views/sign_up_screen.dart';
+import 'package:finance_track/core/utils/caching/save_user_token.dart';
+import 'package:finance_track/core/utils/caching/shared_pref.dart';
+import 'package:finance_track/features/analysis/views/analysis_screen.dart';
+import 'package:finance_track/features/auth/logic/user/user_cubit.dart';
+import 'package:finance_track/features/auth/views/sign_in_screen.dart';
+import 'package:finance_track/features/auth/views/sign_up_screen.dart';
+import 'package:finance_track/features/home/views/home_screen.dart';
+import 'package:finance_track/features/home/views/widgets/add_transaction_screen.dart';
+import 'package:finance_track/features/home/views/widgets/edit_transaction_screen.dart';
+import 'package:finance_track/features/notifications/screen/notification_screen.dart';
+import 'package:finance_track/features/onboarding/views/new_users_questions.dart';
 import 'package:finance_track/features/onboarding/views/onboarding_screen.dart';
+import 'package:finance_track/features/settings/views/setting_screen.dart';
+import 'package:flutter/material.dart' show BuildContext;
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+part 'redirect.dart';
 
 class AppRoutes {
-  final routes = GoRouter(
+  static final routes = GoRouter(
+    debugLogDiagnostics: true,
+    redirect: (context, state) => getRedirect(context, state),
     initialLocation: RoutesPath.onBoradingScreen,
     routes: [
       GoRoute(
@@ -17,12 +35,52 @@ class AppRoutes {
       GoRoute(
         path: RoutesPath.signUpScreen,
         name: RoutesName.signUpScreen,
-        builder: (context, state) => const SignUpScreen(),
+        builder: (context, state) => const SignUp(),
       ),
       GoRoute(
-        path: RoutesPath.signUpScreen,
+        path: RoutesPath.signInScreen,
         name: RoutesName.signInScreen,
-        builder: (context, state) => const SignInScreen(),
+        builder: (context, state) => const SignIn(),
+      ),
+      GoRoute(
+        path: RoutesPath.homeScreen,
+        name: RoutesName.homeScreen,
+        builder: (context, state) => const Home(),
+      ),
+      GoRoute(
+        path: RoutesPath.addTransactionScreen,
+        name: RoutesName.addTransactionScreen,
+        builder: (context, state) => const AddTransaction(),
+      ),
+      GoRoute(
+        path: RoutesPath.editTransactionScreen,
+        name: RoutesName.editTransactionScreen,
+        builder: (context, state) {
+          final transaction = state.extra as TransactionModel;
+          return EditTransaction(transaction: transaction);
+        },
+      ),
+      GoRoute(
+        path: RoutesPath.newUserQuestionsScreen,
+        name: RoutesName.newUsersQuestionsScreen,
+        builder: (context, state) => const NewUsersQuestions(),
+      ),
+
+      GoRoute(
+        path: RoutesPath.settingScreen,
+        name: RoutesName.settingsScreen,
+        builder: (context, state) => const Setting(),
+      ),
+
+      GoRoute(
+        path: RoutesPath.analysisScreen,
+        name: RoutesName.analysisScreen,
+        builder: (context, state) => const Analysis(),
+      ),
+      GoRoute(
+        path: RoutesPath.notificationScreen,
+        name: RoutesName.notificationScreen,
+        builder: (context, state) => const Notification(),
       ),
     ],
   );
